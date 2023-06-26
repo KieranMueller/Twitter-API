@@ -30,7 +30,7 @@ public class Tweet {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private Timestamp posted = new Timestamp(date.getTime());
+    private final Timestamp posted = new Timestamp(date.getTime());
 
     private boolean deleted;
 
