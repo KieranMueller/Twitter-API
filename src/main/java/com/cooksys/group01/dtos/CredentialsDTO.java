@@ -1,6 +1,6 @@
 package com.cooksys.group01.dtos;
 
-public class CredentialsDto {
+public class CredentialsDTO {
 
 	private String username;
 	

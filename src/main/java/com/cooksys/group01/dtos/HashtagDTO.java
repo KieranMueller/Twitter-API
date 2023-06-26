@@ -2,7 +2,7 @@ package com.cooksys.group01.dtos;
 
 import java.sql.Timestamp;
 
-public class HashtagDto {
+public class HashtagDTO {
 
 	private String label;
 
