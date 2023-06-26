@@ -46,7 +46,7 @@ public class User {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private Timestamp joined = new Timestamp(date.getTime());
+    private final Timestamp joined = new Timestamp(date.getTime());
 
     private boolean deleted;
 

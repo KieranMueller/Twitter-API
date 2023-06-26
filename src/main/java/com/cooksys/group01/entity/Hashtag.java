@@ -28,7 +28,7 @@ public class Hashtag {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private Timestamp firstUsed = new Timestamp(date.getTime());
+    private final Timestamp firstUsed = new Timestamp(date.getTime());
 
     @CreationTimestamp
     @Column(nullable = false)
