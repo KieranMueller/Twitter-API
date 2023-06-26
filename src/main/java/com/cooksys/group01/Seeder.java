@@ -7,7 +7,7 @@ import com.cooksys.group01.entities.embeddable.Credentials;
 import com.cooksys.group01.entities.embeddable.Profile;
 import com.cooksys.group01.repositories.HashtagRepository;
 import com.cooksys.group01.repositories.TweetRepository;
-import com.cooksys.group01.repository.UserRepository;
+import com.cooksys.group01.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
