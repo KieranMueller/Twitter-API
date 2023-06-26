@@ -1,5 +1,7 @@
 package com.cooksys.group01.entity;
 
+import com.cooksys.group01.entity.embeddable.Credentials;
+import com.cooksys.group01.entity.embeddable.Profile;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,27 +22,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "email", column = @Column(nullable = false))
+    })
+    private Profile profile;
+
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "username", column = @Column(nullable = false, unique = true)),
+            @AttributeOverride(name = "password", column = @Column(nullable = false))
+    })
+    private Credentials credentials;
 
     @OneToMany(mappedBy = "author")
     private Set<Tweet> tweets;
-
-    private String password;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false, insertable = false)
     private Timestamp joined;
 
     private boolean deleted;
-
-    private String firstName;
-
-    private String lastName;
-
-    private String email;
-
-    private String phone;
 
     @ManyToMany
     @JoinTable(
