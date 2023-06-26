@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -23,38 +25,42 @@ public class Tweet {
     @JoinColumn(name = "author")
     private User author;
 
+    @Transient
+    private Date date = new Date();
+
     @CreationTimestamp
-    @Column(nullable = false, updatable = false, insertable = false)
-    private Timestamp posted;
+    @Column(nullable = false, updatable = false)
+    private Timestamp posted = new Timestamp(date.getTime());
 
     private boolean deleted;
 
     private String content;
 
     @ManyToMany(mappedBy = "likedTweets")
-    private Set<User> likes;
+    private List<User> likes;
 
     @ManyToMany(mappedBy = "mentionedTweets")
-    private Set<User> mentions;
+    private List<User> mentionedUsers;
 
     @ManyToMany
     @JoinTable(
             name = "tweet_hashtags",
             joinColumns = @JoinColumn(name = "tweet_id"),
             inverseJoinColumns = @JoinColumn(name = "hashtag_id"))
-    private Set<Hashtag> hashtags;
+    private List<Hashtag> hashtags;
 
     @OneToMany(mappedBy = "inReplyTo")
-    private Set<Tweet> replyThread;
+    private List<Tweet> replyThread;
 
     @ManyToOne
     @JoinColumn(name = "inReplyTo")
     private Tweet inReplyTo;
 
     @OneToMany(mappedBy = "repostOf")
-    private Set<Tweet> repostThread;
+    private List<Tweet> repostThread;
 
     @ManyToOne
     @JoinColumn(name = "repostOf")
     private Tweet repostOf;
+
 }

@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -36,11 +39,14 @@ public class User {
     private Credentials credentials;
 
     @OneToMany(mappedBy = "author")
-    private Set<Tweet> tweets;
+    private List<Tweet> tweets;
+
+    @Transient
+    private Date date = new Date();
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false, insertable = false)
-    private Timestamp joined;
+    @Column(nullable = false, updatable = false)
+    private Timestamp joined = new Timestamp(date.getTime());
 
     private boolean deleted;
 
@@ -49,22 +55,22 @@ public class User {
             name = "user_likes",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "tweet_id"))
-    private Set<Tweet> likedTweets;
+    private List<Tweet> likedTweets;
 
     @ManyToMany
     @JoinTable(
             name = "user_mentions",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "tweet_id"))
-    private Set<Tweet> mentionedTweets;
+    private List<Tweet> mentionedTweets;
 
     @ManyToMany
     @JoinTable(
             name = "followers_following",
             joinColumns = @JoinColumn(name = "follower_id"),
             inverseJoinColumns = @JoinColumn(name = "following_id"))
-    private Set<User> followers;
+    private List<User> followers;
 
     @ManyToMany(mappedBy = "followers")
-    private Set<User> following;
+    private List<User> following;
 }

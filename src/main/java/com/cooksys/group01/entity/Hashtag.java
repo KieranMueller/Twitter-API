@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -21,15 +23,17 @@ public class Hashtag {
 
     private String label;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false, insertable = false)
-    private Timestamp firstUsed;
+    @Transient
+    private Date date = new Date();
 
-    // Good??
     @CreationTimestamp
-    @Column(nullable = false, insertable = false)
+    @Column(nullable = false, updatable = false)
+    private Timestamp firstUsed = new Timestamp(date.getTime());
+
+    @CreationTimestamp
+    @Column(nullable = false)
     private Timestamp lastUsed;
 
     @ManyToMany(mappedBy = "hashtags")
-    private Set<Tweet> tweetsWithHashtag;
+    private List<Tweet> tweetsWithHashtag;
 }
