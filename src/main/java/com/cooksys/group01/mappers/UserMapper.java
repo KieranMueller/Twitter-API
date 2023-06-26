@@ -1,5 +1,8 @@
 package com.cooksys.group01.mappers;
 
-public class UserMapper {
+import org.mapstruct.Mapper;
+
+@Mapper(componentModel = "spring")
+public interface UserMapper {
 
 }

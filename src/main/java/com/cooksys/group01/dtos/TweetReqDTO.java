@@ -1,0 +1,14 @@
+package com.cooksys.group01.dtos;
+
+import com.cooksys.group01.entities.embeddable.Credentials;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+public class TweetReqDTO {
+
+    private String content;
+
+    private Credentials credentials;
+}
