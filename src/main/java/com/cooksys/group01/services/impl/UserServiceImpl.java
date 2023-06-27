@@ -12,6 +12,7 @@ import com.cooksys.group01.mappers.UserMapper;
 import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.PropertyValueException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,10 +31,10 @@ public class UserServiceImpl implements UserService {
     public List<UserRespDTO> getFollowers(String username) {
         // Working fine, just need to fix issue with User DTO (need to return username but not password)
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
-        if(opUser.isEmpty()) throw new NotFoundException("Unable To Find User With Username " + username);
+        if (opUser.isEmpty()) throw new NotFoundException("Unable To Find User With Username " + username);
         List<User> followers = new ArrayList<>();
-        for(User follower : opUser.get().getFollowers())
-            if(!follower.isDeleted())
+        for (User follower : opUser.get().getFollowers())
+            if (!follower.isDeleted())
                 followers.add(follower);
         return userMapper.entitiesToDTOs(followers);
     }
@@ -42,10 +43,10 @@ public class UserServiceImpl implements UserService {
     public List<UserRespDTO> getFollowing(String username) {
         // Working fine, just need to fix issue with User DTO (need to return username but not password)
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
-        if(opUser.isEmpty()) throw new NotFoundException("Unable To Find User With Username " + username);
+        if (opUser.isEmpty()) throw new NotFoundException("Unable To Find User With Username " + username);
         List<User> followings = new ArrayList<>();
-        for(User following : opUser.get().getFollowing())
-            if(!following.isDeleted())
+        for (User following : opUser.get().getFollowing())
+            if (!following.isDeleted())
                 followings.add(following);
         return userMapper.entitiesToDTOs(followings);
     }
@@ -62,8 +63,11 @@ public class UserServiceImpl implements UserService {
     public UserRespDTO createUser(UserReqDTO user) {
         // Unfinished, still failing a couple tests
         // There's gotta be a better way to do this... Can I make req DTO fields required with annotations? Test it after
-        if(user == null) throw new BadRequestException("User Must Include Email, Phone, First Name, Last Name, Password, and Username");
-        if(user.getCredentials() == null || user.getProfile() == null) throw new BadRequestException("User Must Include Email, Phone, First Name, Last Name, Password, and Username");
+        // Should likely move this logic to a separate, private, helper method
+        if(user == null)
+            throw new BadRequestException("User Must Include Email, Phone, First Name, Last Name, Password, and Username");
+        if(user.getCredentials() == null || user.getProfile() == null)
+            throw new BadRequestException("User Must Include Email, Phone, First Name, Last Name, Password, and Username");
         if(user.getProfile().getEmail() == null || user.getProfile().getPhone() == null ||
                 user.getProfile().getFirstName() == null || user.getProfile().getLastName() == null
                 || user.getCredentials().getPassword() == null || user.getCredentials().getUsername() == null)
@@ -72,19 +76,28 @@ public class UserServiceImpl implements UserService {
                 user.getProfile().getFirstName().isBlank() || user.getProfile().getLastName().isBlank()
                 || user.getCredentials().getPassword().isBlank() || user.getCredentials().getUsername().isBlank())
             throw new BadRequestException("Email, Phone, First Name, Last Name, Password, and Username Cannot Be Left Blank");
-
+        if(user.getCredentials().getUsername().length() > 30)
+            throw new BadRequestException("Username Must Be 30 Characters Or Less");
+        if(user.getCredentials().getPassword().length() < 6 || user.getCredentials().getPassword().length() > 30)
+            throw new BadRequestException("Password Must Be Between 6-30 Characters In Length");
+        var allowedCharacters = new ArrayList<Character>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+                'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
+        String username = user.getCredentials().getUsername().toUpperCase();
+        for(int i = 0; i < username.length(); i++)
+            if(!(allowedCharacters.contains(username.charAt(i))))
+                throw new BadRequestException("Username Must Only Contain Letters And/Or Numbers");
         // find all that aren't deleted, or everyone, revisit this?
         // Better way than looping through every user and checking their usernames?
-        for(User tempUser : userRepository.findAll()) {
-            if(tempUser.getCredentials().getPassword().equals(user.getCredentials().getPassword())
-                && tempUser.getCredentials().getUsername().equals(user.getCredentials().getUsername())) {
+        for (User tempUser : userRepository.findAll()) {
+            if (tempUser.getCredentials().getPassword().equals(user.getCredentials().getPassword())
+                    && tempUser.getCredentials().getUsername().equals(user.getCredentials().getUsername())) {
                 Optional<User> deletedUser = userRepository.findByCredentialsUsernameAndDeletedTrue(user.getCredentials().getUsername());
-                if(deletedUser.isPresent()) {
+                if (deletedUser.isPresent()) {
                     deletedUser.get().setDeleted(false);
                     return userMapper.entityToDTO(userRepository.save(deletedUser.get()));
                 }
             }
-            if(tempUser.getCredentials().getUsername().equals(user.getCredentials().getUsername()))
+            if (tempUser.getCredentials().getUsername().equals(user.getCredentials().getUsername()))
                 throw new BadRequestException("Sorry, Username " + user.getCredentials().getUsername() + " Already Exists!");
         }
         return userMapper.entityToDTO(userRepository.save(userMapper.dtoToEntity(user)));

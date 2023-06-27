@@ -1,5 +1,6 @@
 package com.cooksys.group01.controllers;
 
+import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.services.TweetService;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,11 @@ public class TweetController {
     @GetMapping("/{id}")
     public TweetRespDTO getTweetById(@PathVariable Long id) {
         return tweetService.getTweetById(id);
+    }
+
+    @PostMapping
+    public TweetRespDTO createTweet(@RequestBody TweetReqDTO tweet) {
+        return tweetService.createTweet(tweet);
     }
 
     @DeleteMapping("/{id}")
