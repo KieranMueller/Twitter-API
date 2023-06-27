@@ -20,12 +20,7 @@ public class ValidateServiceImpl implements ValidateService {
 
     @Override
     public boolean doesHashtagExist(String label) {
-        // Current description: Finished, label must be passed without hashtag character, it won't
-        // accept hashtag - doesn't even come through, just throws 404. Appending hashtag to string below. Returns
-        // list of hashtags with matching label, boolean returns whether that list is empty or not
-
-        // To-Do: Implement 404 not found if it doesn't exist? Or is 200 status with response body of false
-        // sufficient?
+        // Throw 404 if not doesn't exist or leave it as is? (200 OK but body returns false)
         label = "#" + label;
         List<Hashtag> opHashtag = hashtagRepository.findByLabel(label);
         return opHashtag.size() > 0;

@@ -13,7 +13,6 @@ public class TweetRespDTO {
 
     private Long id;
 
-    // Should this be User or UserRespDTO?
     private UserRespDTO author;
 
     private Timestamp posted;
