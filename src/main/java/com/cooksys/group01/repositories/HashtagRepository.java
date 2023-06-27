@@ -11,8 +11,6 @@ import java.util.Optional;
 @Repository
 public interface HashtagRepository extends JpaRepository<Hashtag, Long> {
 
-    List<Hashtag> findAllByLabel(String label);
-
     Optional<Hashtag> findByLabel(String label);
 
     @Query("select label from Hashtag")
