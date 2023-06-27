@@ -24,12 +24,9 @@ public class Tweet {
     @JoinColumn(name = "author")
     private User author;
 
-    @Transient
-    private Date date = new Date();
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private final Timestamp posted = new Timestamp(date.getTime());
+    private final Timestamp posted;
 
     private boolean deleted;
 
