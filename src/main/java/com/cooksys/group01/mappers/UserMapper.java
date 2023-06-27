@@ -11,7 +11,7 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = {CredentialMapper.class, ProfileMapper.class})
 public interface UserMapper {
 
-    @Mapping(target="username", source="credentials.username")
+//    @Mapping(target="username", source="credentials.username")
     UserRespDTO entityToDTO(User user);
 
     User dtoToEntity(UserReqDTO user);

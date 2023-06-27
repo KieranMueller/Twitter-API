@@ -41,7 +41,7 @@ public class User {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private final Timestamp joined;
+    private Timestamp joined;
 
     private boolean deleted;
 

@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContextRespDTO {
+    
     private TweetRespDTO target;
 
     private List<TweetRespDTO> before;

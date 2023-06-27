@@ -1,8 +1,5 @@
 package com.cooksys.group01.dtos;
 
-import com.cooksys.group01.entities.embeddable.Credentials;
-import com.cooksys.group01.entities.embeddable.Profile;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,9 +11,9 @@ public class UserReqDTO {
 
     // How is this going to work with the mapper and embeddable classes...
 
-    private ProfileReqDTO profile;
+    private ProfileDTO profile;
 
-    private CredentialsReqDTO credentials;
+    private CredentialsDTO credentials;
 
     // Fine to just leave out creation timestamp?
 

@@ -26,7 +26,7 @@ public class Tweet {
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private final Timestamp posted;
+    private Timestamp posted;
 
     private boolean deleted;
 
