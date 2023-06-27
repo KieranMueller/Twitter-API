@@ -20,10 +20,9 @@ public class ValidateServiceImpl implements ValidateService {
 
     @Override
     public boolean doesHashtagExist(String label) {
-        // Throw 404 if not doesn't exist or leave it as is? (200 OK but body returns false)
         label = "#" + label;
-        List<Hashtag> opHashtag = hashtagRepository.findAllByLabel(label);
-        return opHashtag.size() > 0;
+        Optional<Hashtag> opHashtag = hashtagRepository.findByLabel(label);
+        return opHashtag.isPresent();
     }
 
     @Override
