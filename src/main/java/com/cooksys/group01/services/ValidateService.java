@@ -10,4 +10,6 @@ public interface ValidateService {
 
     List<HashtagDTO> getAllHashtags();
 
+	boolean doesUserExist(String username);
+
 }
