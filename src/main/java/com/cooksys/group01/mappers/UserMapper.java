@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {CredentialMapper.class, ProfileMapper.class})
 public interface UserMapper {
 
     UserRespDTO entityToDTO(User user);
