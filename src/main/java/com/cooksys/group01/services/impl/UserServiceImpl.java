@@ -3,11 +3,9 @@ package com.cooksys.group01.services.impl;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.dtos.UserReqDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
-import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
 import com.cooksys.group01.exceptions.BadRequestException;
 import com.cooksys.group01.exceptions.NotFoundException;
-import com.cooksys.group01.mappers.TweetMapper;
 import com.cooksys.group01.mappers.UserMapper;
 import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.UserService;
@@ -17,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +23,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final TweetMapper tweetMapper;
+
+    @Override
+    public List<UserRespDTO> getActiveUsers() {
+        List<User> userList = userRepository.findAll();
+        return userMapper.entitiesToDTOs(userList.stream().filter( user -> !user.isDeleted()).collect(Collectors.toList()));
+    }
 
     @Override
     public List<UserRespDTO> getFollowers(String username) {

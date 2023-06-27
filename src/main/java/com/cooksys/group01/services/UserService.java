@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface UserService {
 
+    List<UserRespDTO> getActiveUsers();
+
     List<UserRespDTO> getFollowers(String username);
 
     List<UserRespDTO> getFollowing(String username);
