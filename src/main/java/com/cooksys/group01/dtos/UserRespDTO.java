@@ -14,11 +14,9 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class UserRespDTO {
 
-    // Just a test, have to figure out how to return username but not password - Kieran
-    @JsonIgnore
-    private Credentials credentials;
+    private ProfileRespDTO profile;
 
-    private Profile profile;
+    private CredentialsRespDTO credentials;
 
     private Timestamp joined;
 }

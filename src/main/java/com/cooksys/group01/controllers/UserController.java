@@ -1,12 +1,10 @@
 package com.cooksys.group01.controllers;
 
 import com.cooksys.group01.dtos.TweetRespDTO;
+import com.cooksys.group01.dtos.UserReqDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
 import com.cooksys.group01.services.UserService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,6 +30,11 @@ public class UserController {
     @GetMapping("/@{username}/mentions")
     public List<TweetRespDTO> getMentions(@PathVariable String username) {
         return userService.getMentions(username);
+    }
+
+    @PostMapping
+    public UserRespDTO createUser(@RequestBody UserReqDTO user) {
+        return userService.createUser(user);
     }
 
 }
