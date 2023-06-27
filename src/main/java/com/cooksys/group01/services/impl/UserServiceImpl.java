@@ -3,11 +3,11 @@ package com.cooksys.group01.services.impl;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.dtos.UserReqDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
-import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
+import com.cooksys.group01.entities.embeddable.Credentials;
 import com.cooksys.group01.exceptions.BadRequestException;
+import com.cooksys.group01.exceptions.NotAuthorizedException;
 import com.cooksys.group01.exceptions.NotFoundException;
-import com.cooksys.group01.mappers.TweetMapper;
 import com.cooksys.group01.mappers.UserMapper;
 import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.UserService;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final TweetMapper tweetMapper;
+
+    @Override
+    public List<UserRespDTO> getActiveUsers() {
+        List<User> userList = userRepository.findAll();
+        return userMapper.entitiesToDTOs(userList.stream().filter( user -> !user.isDeleted()).collect(Collectors.toList()));
+    }
 
     @Override
     public List<UserRespDTO> getFollowers(String username) {
@@ -101,5 +107,49 @@ public class UserServiceImpl implements UserService {
                 throw new BadRequestException("Sorry, Username " + user.getCredentials().getUsername() + " Already Exists!");
         }
         return userMapper.entityToDTO(userRepository.save(userMapper.dtoToEntity(user)));
+    }
+
+    @Override
+    public void followUser(String username, Credentials credentials) {
+        User toBeFollowed = getUserByUsername(username);
+        User follower = authorizeCredentials(credentials);
+        if (!isActive(toBeFollowed))
+            throw new BadRequestException("User + " + username + " not found!");
+        if (follower.getFollowing().contains(toBeFollowed))
+            throw new BadRequestException("Already following " + username +"!");
+        follower.addFollowing(toBeFollowed);
+        userRepository.saveAndFlush(follower);
+        userRepository.saveAndFlush(toBeFollowed);
+    }
+
+    @Override
+    public void unfollowUser(String username, Credentials credentials) {
+        User toBeUnfollowed = getUserByUsername(username);
+        User follower = authorizeCredentials(credentials);
+        if (!isActive(toBeUnfollowed))
+            throw new BadRequestException("User " + username + " not found!");
+        if (!follower.getFollowing().contains(toBeUnfollowed))
+            throw new BadRequestException("Currently not following " + username +"!");
+        follower.removeFollowing(toBeUnfollowed);
+        userRepository.saveAndFlush(follower);
+        userRepository.saveAndFlush(toBeUnfollowed);
+    }
+
+    // HELPER FUNCTIONS
+
+    private boolean isActive(User user) {
+        return user != null && !user.isDeleted();
+    }
+
+    private User getUserByUsername(String username) {
+        Optional<User> userOptional = userRepository.findByCredentialsUsername(username);
+        return userOptional.orElse(null);
+    }
+
+    private User authorizeCredentials(Credentials credentials) {
+        Optional<User> userOptional = userRepository.findOneByCredentials(credentials);
+        if (userOptional.isEmpty() || userOptional.get().isDeleted())
+            throw new NotAuthorizedException("Not authorized: Bad credentials!");
+        return userOptional.get();
     }
 }
