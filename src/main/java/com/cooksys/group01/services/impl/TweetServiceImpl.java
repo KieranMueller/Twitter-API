@@ -15,6 +15,7 @@ import com.cooksys.group01.services.TweetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.*;
 
 @Service
@@ -79,8 +80,19 @@ public class TweetServiceImpl implements TweetService {
             }
         }
         List<Hashtag> savedTags = new ArrayList<>();
-        for(String hashtag : hashtags)
-            savedTags.add(hashtagRepository.save(new Hashtag(null, hashtag, null, null, null)));
+        List<String> existingLabels = new ArrayList<>(hashtagRepository.getAllLabels());
+        for(String hashtag : hashtags) {
+            if(!existingLabels.contains(hashtag))
+                savedTags.add(hashtagRepository.save(new Hashtag(null, hashtag, null, null, null)));
+            else {
+                Optional<Hashtag> tagToUpdate = hashtagRepository.findByLabel(hashtag);
+                if(tagToUpdate.isPresent()) {
+                    Date date = new Date();
+                    tagToUpdate.get().setLastUsed(new Timestamp(date.getTime()));
+                    hashtagRepository.save(tagToUpdate.get());
+                }
+            }
+        }
         for(String possibleUser : usernamesMentioned) {
             Optional<User> foundUser = userRepository.findByCredentialsUsernameAndDeletedFalse(possibleUser);
             foundUser.ifPresent(value -> value.addMentionedTweet(tweetEntity));

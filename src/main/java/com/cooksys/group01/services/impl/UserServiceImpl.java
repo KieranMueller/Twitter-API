@@ -3,11 +3,13 @@ package com.cooksys.group01.services.impl;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.dtos.UserReqDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
+import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
 import com.cooksys.group01.entities.embeddable.Credentials;
 import com.cooksys.group01.exceptions.BadRequestException;
 import com.cooksys.group01.exceptions.NotAuthorizedException;
 import com.cooksys.group01.exceptions.NotFoundException;
+import com.cooksys.group01.mappers.TweetMapper;
 import com.cooksys.group01.mappers.UserMapper;
 import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.UserService;
@@ -26,6 +28,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final TweetMapper tweetMapper;
 
     @Override
     public List<UserRespDTO> getActiveUsers() {
@@ -35,41 +38,48 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserRespDTO> getFollowers(String username) {
-        // Working fine, just need to fix issue with User DTO (need to return username but not password)
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
         if (opUser.isEmpty()) throw new NotFoundException("Unable To Find User With Username " + username);
-        List<User> followers = new ArrayList<>();
+        List<UserRespDTO> followers = new ArrayList<>();
         for (User follower : opUser.get().getFollowers())
-            if (!follower.isDeleted())
-                followers.add(follower);
-        return userMapper.entitiesToDTOs(followers);
+            if (!follower.isDeleted()) {
+                UserRespDTO tempUser = userMapper.entityToDTO(follower);
+                tempUser.getCredentials().setPassword("TOP SECRET!");
+                followers.add(tempUser);
+            }
+        return followers;
     }
 
     @Override
     public List<UserRespDTO> getFollowing(String username) {
-        // Working fine, just need to fix issue with User DTO (need to return username but not password)
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
         if (opUser.isEmpty()) throw new NotFoundException("Unable To Find User With Username " + username);
-        List<User> followings = new ArrayList<>();
+        List<UserRespDTO> followings = new ArrayList<>();
         for (User following : opUser.get().getFollowing())
-            if (!following.isDeleted())
-                followings.add(following);
-        return userMapper.entitiesToDTOs(followings);
+            if (!following.isDeleted()) {
+                UserRespDTO tempUser = userMapper.entityToDTO(following);
+                tempUser.getCredentials().setPassword("TOP SECRET!");
+                followings.add(tempUser);
+            }
+        return followings;
     }
 
     @Override
     public List<TweetRespDTO> getMentions(String username) {
-        // Hmmm, a user is considered mentioned if their username is included in the content
-        // of a tweet prefixed with @ symbol, don't think I set up this logic, seeder doesn't seem to contain
-        // any tweets that even mention users, maybe add one myself to the seeder for testing
-        return null;
+        // TODO - Ensure the tweets are in reverse chronological order!
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+        if(opUser.isEmpty())
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
+        User user = opUser.get();
+        List<Tweet> mentionedTweets = new ArrayList<>();
+        for(Tweet t : user.getMentionedTweets())
+            if(!t.isDeleted())
+                mentionedTweets.add(t);
+        return tweetMapper.entitiesToDTOs(mentionedTweets);
     }
 
     @Override
     public UserRespDTO createUser(UserReqDTO user) {
-        // Unfinished, still failing a couple tests
-        // There's gotta be a better way to do this... Can I make req DTO fields required with annotations? Test it after
-        // Should likely move this logic to a separate, private, helper method
         if(user == null)
             throw new BadRequestException("User Must Include Email, Phone, First Name, Last Name, Password, and Username");
         if(user.getCredentials() == null || user.getProfile() == null)
