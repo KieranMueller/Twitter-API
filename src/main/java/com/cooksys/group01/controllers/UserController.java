@@ -3,8 +3,14 @@ package com.cooksys.group01.controllers;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.dtos.UserReqDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
+
+import com.cooksys.group01.exceptions.BadRequestException;
+
 import com.cooksys.group01.entities.embeddable.Credentials;
+
 import com.cooksys.group01.services.UserService;
+import org.hibernate.PropertyValueException;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -39,6 +45,7 @@ public class UserController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public UserRespDTO createUser(@RequestBody UserReqDTO user) {
         return userService.createUser(user);
     }
