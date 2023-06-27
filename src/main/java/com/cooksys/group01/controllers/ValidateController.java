@@ -19,7 +19,6 @@ public class ValidateController {
 
     private final ValidateService validateService;
 
-    // Unfinished - Kieran (See method in service impl for more detail)
     @GetMapping("/tag/exists/{label}")
     public boolean doesHashtagExist(@PathVariable String label) {
         return validateService.doesHashtagExist(label);
