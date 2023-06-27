@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -22,14 +23,11 @@ public class Hashtag {
 
     private String label;
 
-    @Transient
-    private Date date = new Date();
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private final Timestamp firstUsed = new Timestamp(date.getTime());
+    private final Timestamp firstUsed;
 
-    @CreationTimestamp
+    @UpdateTimestamp
     @Column(nullable = false)
     private Timestamp lastUsed;
 
