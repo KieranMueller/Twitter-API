@@ -9,4 +9,5 @@ public interface ValidateService {
     boolean doesHashtagExist(String label);
 
     List<HashtagDTO> getAllHashtags();
+
 }

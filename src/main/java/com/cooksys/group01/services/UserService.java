@@ -15,4 +15,5 @@ public interface UserService {
     List<TweetRespDTO> getMentions(String username);
 
     UserRespDTO createUser(UserReqDTO user);
+
 }
