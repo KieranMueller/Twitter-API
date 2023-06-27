@@ -39,12 +39,9 @@ public class User {
     @OneToMany(mappedBy = "author")
     private List<Tweet> tweets;
 
-    @Transient
-    private Date date = new Date();
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private final Timestamp joined = new Timestamp(date.getTime());
+    private final Timestamp joined;
 
     private boolean deleted;
 
