@@ -1,3 +1,4 @@
+/*
 package com.cooksys.group01;
 
 import com.cooksys.group01.entities.Hashtag;
@@ -278,4 +279,4 @@ public class Seeder implements CommandLineRunner {
         userRepository.saveAndFlush(user1);
     }
 
-}
+}*/

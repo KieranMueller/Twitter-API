@@ -1,6 +1,9 @@
 package com.cooksys.group01.services.impl;
 
-import com.cooksys.group01.dtos.*;
+import com.cooksys.group01.dtos.ProfileDTO;
+import com.cooksys.group01.dtos.TweetRespDTO;
+import com.cooksys.group01.dtos.UserReqDTO;
+import com.cooksys.group01.dtos.UserRespDTO;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
 import com.cooksys.group01.entities.embeddable.Credentials;
@@ -234,7 +237,6 @@ public class UserServiceImpl implements UserService {
             throw new NotAuthorizedException("Not Authorized: Could Not Verify Credentials");
 
         User user = opUser.get();
-        // TODO: if already following user
         if (user.getFollowing().contains(toBeFollowed))
             throw new BadRequestException("Already following " + username + "!");
 
@@ -281,12 +283,4 @@ public class UserServiceImpl implements UserService {
         userRespDTO.setUsername(user.getCredentials().getUsername());
         return userRespDTO;
     }
-
-    // HELPER FUNCTIONS
-
-    private User _getUserByUsername(String username) {
-        Optional<User> userOptional = userRepository.findByCredentialsUsername(username);
-        return userOptional.orElse(null);
-    }
-
 }
