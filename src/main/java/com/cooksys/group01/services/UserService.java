@@ -29,4 +29,8 @@ public interface UserService {
 
     List<TweetRespDTO> getFeed(String username);
 
+<<<<<<< HEAD
+=======
+    UserRespDTO updateUser(String username, UserReqDTO user);
+>>>>>>> 5b1ab182a7114e21cac2100235c72da64611ae51
 }

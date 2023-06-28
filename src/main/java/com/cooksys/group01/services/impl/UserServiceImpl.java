@@ -1,8 +1,6 @@
 package com.cooksys.group01.services.impl;
 
-import com.cooksys.group01.dtos.TweetRespDTO;
-import com.cooksys.group01.dtos.UserReqDTO;
-import com.cooksys.group01.dtos.UserRespDTO;
+import com.cooksys.group01.dtos.*;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
 import com.cooksys.group01.entities.embeddable.Credentials;
@@ -147,6 +145,44 @@ public class UserServiceImpl implements UserService {
             }
         }
         return tweets;
+    }
+
+    @Override
+    public UserRespDTO updateUser(String username, UserReqDTO user) {
+        /* Checking for null profile or credentials. Then for null username or password. Then ensuring
+        username within request body matches username in URL */
+        if(user.getCredentials() == null || user.getProfile() == null)
+            throw new BadRequestException("Must Provide Profile And Credentials!");
+        if(user.getCredentials().getUsername() == null || user.getCredentials().getPassword() == null)
+            throw new BadRequestException("Must Provide Credentials!");
+        if(!username.equals(user.getCredentials().getUsername()))
+            throw new BadRequestException("Invalid Username");
+        /* Find User in DB based on URL username and request body password, if
+        empty, unable to find, throw bad request. Otherwise, User theUser equals the user we found */
+        Optional<User> opUser = userRepository.
+                findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
+                        username, user.getCredentials().getPassword());
+        if(opUser.isEmpty())
+            throw new BadRequestException("Invalid Credentials!");
+        User theUser = opUser.get();
+        /* Null checks necessary to avoid 500 level errors from null pointer exceptions, setting necessary
+        fields based on what is present/not null in request body */
+        if(user.getProfile() != null) {
+            ProfileDTO profile = user.getProfile();
+            if(profile.getEmail() != null)
+                theUser.getProfile().setEmail(profile.getEmail());
+            if(profile.getPhone() != null)
+                theUser.getProfile().setPhone(profile.getPhone());
+            if(profile.getFirstName() != null)
+                theUser.getProfile().setFirstName(profile.getFirstName());
+            if(profile.getLastName() != null)
+                theUser.getProfile().setLastName(profile.getLastName());
+        }
+        /* This charade is done to send a userRespDTO that does NOT have a null username, save entity to DB */
+        UserRespDTO userRespDTO = userMapper.entityToDTO(theUser);
+        userRespDTO.setUsername(theUser.getCredentials().getUsername());
+        userRepository.save(theUser);
+        return userRespDTO;
     }
 
     @Override
