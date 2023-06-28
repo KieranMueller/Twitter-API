@@ -11,7 +11,7 @@ public interface UserService {
 
     List<UserRespDTO> getActiveUsers();
 
-    UserRespDTO getUserByUsername(String username);
+    UserRespDTO getUser(String username);
 
     UserRespDTO createUser(UserReqDTO user);
 
@@ -24,8 +24,6 @@ public interface UserService {
     void followUser(String username, Credentials credentials);
 
     void unfollowUser(String username, Credentials credentials);
-
-	UserRespDTO getUser(String username);
 
     List<TweetRespDTO> getFeed(String username);
 

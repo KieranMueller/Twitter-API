@@ -51,13 +51,13 @@ public class UserServiceImpl implements UserService {
         return userDTO;
     }
 
-    public UserRespDTO getUserByUsername(String username) {
+    /*public UserRespDTO getUserByUsername(String username) {
         User user = _getUserByUsername(username);
         if (user == null || user.isDeleted())
             throw new NotFoundException("User with username '" + username + "' not found");
         return userMapper.entityToDTO(user);
 
-    }
+    }*/
 
     @Override
     public List<UserRespDTO> getFollowers(String username) {
