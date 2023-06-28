@@ -1,5 +1,6 @@
 package com.cooksys.group01.services.impl;
 
+import com.cooksys.group01.dtos.CredentialsDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.entities.Hashtag;
@@ -13,6 +14,8 @@ import com.cooksys.group01.repositories.TweetRepository;
 import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.TweetService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -47,13 +50,14 @@ public class TweetServiceImpl implements TweetService {
             throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
         if(tweet.getContent().isBlank())
             throw new BadRequestException("Tweet Must Contain Content");
-        Optional<User> user = userRepository.findByCredentialsUsernameAndDeletedFalse(tweet.getCredentials().getUsername());
-        if(user.isEmpty())
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(tweet.getCredentials().getUsername());
+        if(opUser.isEmpty())
             throw new BadRequestException("Username '" + tweet.getCredentials().getUsername() + "' Invalid. Please Consider Signing Up!");
-        if(!(user.get().getCredentials().getPassword().equals(tweet.getCredentials().getPassword())))
+        User user = opUser.get();
+        if(!user.getCredentials().getPassword().equals(tweet.getCredentials().getPassword()))
             throw new BadRequestException("Invalid Password!");
         Tweet tweetEntity = tweetMapper.dtoToEntity(tweet);
-        tweetEntity.setAuthor(user.get());
+        tweetEntity.setAuthor(user);
         var allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
                 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
         String[] arr = tweet.getContent().split(" ");
@@ -99,9 +103,26 @@ public class TweetServiceImpl implements TweetService {
         }
         tweetEntity.setHashtags(savedTags);
         TweetRespDTO savedTweet = tweetMapper.entityToDTO(tweetRepository.save(tweetEntity));
-        // Temporary, semi-joking solution. Sets the password on the DTO that is returned, does not alter the actual user's password.
-        savedTweet.getAuthor().getCredentials().setPassword("TOP SECRET!");
+        savedTweet.getAuthor().setUsername(user.getCredentials().getUsername());
         return savedTweet;
+    }
+
+    @Override
+    public ResponseEntity<HttpStatus> likeTweet(Long id, CredentialsDTO credentials) {
+        Optional<User> opUser = userRepository.
+                findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(credentials.getUsername(), credentials.getPassword());
+        if(opUser.isEmpty())
+            throw new BadRequestException("Could Not Verify Credentials");
+        Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+        if(opTweet.isEmpty())
+            throw new NotFoundException("Unable To Find Tweet With ID " + id);
+        Tweet tweet = opTweet.get();
+        User user = opUser.get();
+        user.addLikedTweet(tweet);
+        userRepository.saveAndFlush(user);
+
+
+        return null;
     }
 
     @Override

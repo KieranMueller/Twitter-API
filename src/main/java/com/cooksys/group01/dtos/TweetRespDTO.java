@@ -22,4 +22,5 @@ public class TweetRespDTO {
     private TweetRespDTO inReplyTo;
 
     private TweetRespDTO repostOf;
+
 }

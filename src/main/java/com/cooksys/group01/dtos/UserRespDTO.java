@@ -11,9 +11,10 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class UserRespDTO {
 
+    private String username;
+
     private ProfileDTO profile;
 
-    private CredentialsDTO credentials;
-
     private Timestamp joined;
+
 }
