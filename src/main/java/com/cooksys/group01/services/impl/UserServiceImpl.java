@@ -35,6 +35,13 @@ public class UserServiceImpl implements UserService {
         return userMapper.entitiesToDTOs(userList.stream().filter( user -> !user.isDeleted()).collect(Collectors.toList()));
     }
 
+    public UserRespDTO getUserByUsername(String username) {
+        User user = _getUserByUsername(username);
+        if (user == null || user.isDeleted())
+            throw new NotFoundException("User with username '" + username + "' not found");
+        return userMapper.entityToDTO(user);
+    }
+
     @Override
     public List<UserRespDTO> getFollowers(String username) {
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
@@ -126,10 +133,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void followUser(String username, Credentials credentials) {
-        User toBeFollowed = getUserByUsername(username);
+        User toBeFollowed = _getUserByUsername(username);
         User follower = authorizeCredentials(credentials);
-        if (!isActive(toBeFollowed))
-            throw new BadRequestException("User + " + username + " not found!");
+        //if (!isActive(toBeFollowed))
+            //throw new BadRequestException("User + " + username + " not found!");
         if (follower.getFollowing().contains(toBeFollowed))
             throw new BadRequestException("Already following " + username +"!");
         follower.addFollowing(toBeFollowed);
@@ -139,10 +146,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void unfollowUser(String username, Credentials credentials) {
-        User toBeUnfollowed = getUserByUsername(username);
+        User toBeUnfollowed = _getUserByUsername(username);
         User follower = authorizeCredentials(credentials);
-        if (!isActive(toBeUnfollowed))
-            throw new BadRequestException("User " + username + " not found!");
+        //if (!isActive(toBeUnfollowed))
+            //throw new BadRequestException("User " + username + " not found!");
         if (!follower.getFollowing().contains(toBeUnfollowed))
             throw new BadRequestException("Currently not following " + username +"!");
         follower.removeFollowing(toBeUnfollowed);
@@ -152,11 +159,7 @@ public class UserServiceImpl implements UserService {
 
     // HELPER FUNCTIONS
 
-    private boolean isActive(User user) {
-        return user != null && !user.isDeleted();
-    }
-
-    private User getUserByUsername(String username) {
+    private User _getUserByUsername(String username) {
         Optional<User> userOptional = userRepository.findByCredentialsUsername(username);
         return userOptional.orElse(null);
     }
@@ -168,8 +171,5 @@ public class UserServiceImpl implements UserService {
         return userOptional.get();
     }
     
-    public UserRespDTO getUser(String username) {
-    	User userRet = getUserByUsername(username);
-    	return userMapper.entityToDTO(userRet);
-    }
+
 }
