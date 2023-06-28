@@ -48,6 +48,12 @@ public class UserController {
         return userService.getFeed(username);
     }
 
+    @PatchMapping("/@{username}")
+    public UserRespDTO updateUser(@PathVariable String username, @RequestBody UserReqDTO user) {
+        return userService.updateUser(username, user);
+    }
+
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserRespDTO createUser(@RequestBody UserReqDTO user) {
