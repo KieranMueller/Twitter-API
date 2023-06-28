@@ -3,6 +3,7 @@ package com.cooksys.group01.services;
 import java.util.List;
 
 import com.cooksys.group01.dtos.HashtagDTO;
+import com.cooksys.group01.dtos.TweetRespDTO;
 
 public interface HashtagService {
   
@@ -10,4 +11,5 @@ public interface HashtagService {
   
     HashtagDTO getRandomHashtag();
 
+    List<TweetRespDTO> getTweetsByTag(String label);
 }

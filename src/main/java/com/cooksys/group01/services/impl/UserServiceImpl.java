@@ -236,7 +236,6 @@ public class UserServiceImpl implements UserService {
             throw new NotAuthorizedException("Not Authorized: Could Not Verify Credentials");
 
         User user = opUser.get();
-        // TODO: if already following user
         if (user.getFollowing().contains(toBeFollowed))
             throw new BadRequestException("Already following " + username +"!");
 
@@ -263,12 +262,4 @@ public class UserServiceImpl implements UserService {
         user.removeFollowing(toUnfollow);
         userRepository.saveAndFlush(user);
     }
-
-    // HELPER FUNCTIONS
-
-    private User _getUserByUsername(String username) {
-        Optional<User> userOptional = userRepository.findByCredentialsUsername(username);
-        return userOptional.orElse(null);
-    }
-
 }
