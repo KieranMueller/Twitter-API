@@ -1,6 +1,9 @@
 package com.cooksys.group01.services.impl;
 
-import com.cooksys.group01.dtos.*;
+import com.cooksys.group01.dtos.ProfileDTO;
+import com.cooksys.group01.dtos.TweetRespDTO;
+import com.cooksys.group01.dtos.UserReqDTO;
+import com.cooksys.group01.dtos.UserRespDTO;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
 import com.cooksys.group01.entities.embeddable.Credentials;
@@ -17,7 +20,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -50,14 +52,6 @@ public class UserServiceImpl implements UserService {
         userDTO.setUsername(opUser.get().getCredentials().getUsername());
         return userDTO;
     }
-
-    /*public UserRespDTO getUserByUsername(String username) {
-        User user = _getUserByUsername(username);
-        if (user == null || user.isDeleted())
-            throw new NotFoundException("User with username '" + username + "' not found");
-        return userMapper.entityToDTO(user);
-
-    }*/
 
     @Override
     public List<UserRespDTO> getFollowers(String username) {
