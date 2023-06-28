@@ -1,9 +1,6 @@
 package com.cooksys.group01.services.impl;
 
-import com.cooksys.group01.dtos.ProfileDTO;
-import com.cooksys.group01.dtos.TweetRespDTO;
-import com.cooksys.group01.dtos.UserReqDTO;
-import com.cooksys.group01.dtos.UserRespDTO;
+import com.cooksys.group01.dtos.*;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
 import com.cooksys.group01.entities.embeddable.Credentials;
