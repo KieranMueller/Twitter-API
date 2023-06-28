@@ -10,9 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface HashtagRepository extends JpaRepository<Hashtag, Long> {
-
-    List<Hashtag> findByLabel(String label);
-    
     List<Hashtag> findAll();
 
     Optional<Hashtag> findByLabel(String label);
