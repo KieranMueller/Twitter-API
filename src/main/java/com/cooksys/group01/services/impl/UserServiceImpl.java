@@ -16,6 +16,7 @@ import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final TweetMapper tweetMapper;
+
+    private final List<Character> allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E',
+            'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y',
+            'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
 
     @Override
     public List<UserRespDTO> getActiveUsers() {
@@ -180,46 +185,38 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserRespDTO createUser(UserReqDTO user) {
-        if (user == null)
-            throw new BadRequestException("User Must Include Email, Phone, First Name, Last Name, Password, and Username");
         if (user.getCredentials() == null || user.getProfile() == null)
-            throw new BadRequestException("User Must Include Email, Phone, First Name, Last Name, Password, and Username");
-        if (user.getProfile().getEmail() == null || user.getProfile().getPhone() == null ||
-                user.getProfile().getFirstName() == null || user.getProfile().getLastName() == null
-                || user.getCredentials().getPassword() == null || user.getCredentials().getUsername() == null)
-            throw new BadRequestException("User Must Include Email, Phone, First Name, Last Name, Password, and Username");
-        if (user.getProfile().getEmail().isBlank() || user.getProfile().getPhone().isBlank() ||
-                user.getProfile().getFirstName().isBlank() || user.getProfile().getLastName().isBlank()
-                || user.getCredentials().getPassword().isBlank() || user.getCredentials().getUsername().isBlank())
-            throw new BadRequestException("Email, Phone, First Name, Last Name, Password, and Username Cannot Be Left Blank");
-        if (user.getCredentials().getUsername().length() > 30)
-            throw new BadRequestException("Username Must Be 30 Characters Or Less");
-        if (user.getCredentials().getPassword().length() < 6 || user.getCredentials().getPassword().length() > 30)
-            throw new BadRequestException("Password Must Be Between 6-30 Characters In Length");
-        var allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-                'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
-        String username = user.getCredentials().getUsername().toUpperCase();
+            throw new BadRequestException("Must Include Email, Phone, First Name, Last Name, Password, and Username");
+        CredentialsDTO credentials = user.getCredentials();
+        ProfileDTO profile = user.getProfile();
+        if (profile.getEmail() == null || profile.getPhone() == null || profile.getFirstName() == null
+                || profile.getLastName() == null || credentials.getPassword() == null
+                || credentials.getUsername() == null)
+            throw new BadRequestException("Must Include Email, Phone, First Name, Last Name, Password, and Username");
+        String username = credentials.getUsername();
         for (int i = 0; i < username.length(); i++)
-            if (!(allowedCharacters.contains(username.charAt(i))))
-                throw new BadRequestException("Username Must Only Contain Letters And/Or Numbers");
-        // find all that aren't deleted, or everyone, revisit this?
-        // Better way than looping through every user and checking their usernames?
+            if (!allowedCharacters.contains(username.toUpperCase().charAt(i)))
+                throw new BadRequestException("Username Must Not Contain Special Characters");
         for (User tempUser : userRepository.findAll()) {
-            if (tempUser.getCredentials().getPassword().equals(user.getCredentials().getPassword())
-                    && tempUser.getCredentials().getUsername().equals(user.getCredentials().getUsername())) {
+            if (tempUser.getCredentials().getPassword().equals(credentials.getPassword())
+                    && tempUser.getCredentials().getUsername().equals(credentials.getUsername())) {
                 Optional<User> deletedUser = userRepository.
                         findByCredentialsUsernameAndDeletedTrue(
-                                user.getCredentials().getUsername());
+                                credentials.getUsername());
                 if (deletedUser.isPresent()) {
-                    deletedUser.get().setDeleted(false);
-                    return userMapper.entityToDTO(userRepository.save(deletedUser.get()));
+                    User restoredUser = deletedUser.get();
+                    restoredUser.setDeleted(false);
+                    userRepository.save(restoredUser);
+                    UserRespDTO restoredUserDTO = userMapper.entityToDTO(restoredUser);
+                    restoredUserDTO.setUsername(restoredUser.getCredentials().getUsername());
+                    return restoredUserDTO;
                 }
             }
-            if (tempUser.getCredentials().getUsername().equals(user.getCredentials().getUsername()))
-                throw new BadRequestException("Sorry, Username " + user.getCredentials().getUsername() + " Already Exists!");
+            if (tempUser.getCredentials().getUsername().equals(credentials.getUsername()))
+                throw new BadRequestException("Username '" + credentials.getUsername() + "' Already Exists!");
         }
         UserRespDTO userResp = userMapper.entityToDTO(userRepository.save(userMapper.dtoToEntity(user)));
-        userResp.setUsername(user.getCredentials().getUsername());
+        userResp.setUsername(credentials.getUsername());
         return userResp;
     }
 
@@ -267,17 +264,18 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public UserRespDTO deleteUser(String username, CredentialsDTO credentials) {
-        if(credentials.getUsername() == null || credentials.getPassword() == null)
+        if (credentials.getUsername() == null || credentials.getPassword() == null)
             throw new NotAuthorizedException("Invalid Credentials!");
-        if(!credentials.getUsername().equals(username))
+        if (!credentials.getUsername().equals(username))
             throw new NotAuthorizedException("Invalid Username");
         Optional<User> opUser = userRepository
                 .findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
                         username, credentials.getPassword());
-        if(opUser.isEmpty())
+        if (opUser.isEmpty())
             throw new NotFoundException("Unable To Find Username '" + username + "' With Provided Credentials");
         User user = opUser.get();
         user.setDeleted(true);
+        userRepository.save(user);
         UserRespDTO userRespDTO = userMapper.entityToDTO(user);
         userRespDTO.setUsername(user.getCredentials().getUsername());
         return userRespDTO;
