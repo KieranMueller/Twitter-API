@@ -3,13 +3,10 @@ package com.cooksys.group01.controllers;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.dtos.UserReqDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
-import com.cooksys.group01.exceptions.BadRequestException;
 import com.cooksys.group01.services.UserService;
-import org.hibernate.PropertyValueException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -44,6 +41,11 @@ public class UserController {
     @GetMapping("/@{username}/mentions")
     public List<TweetRespDTO> getMentions(@PathVariable String username) {
         return userService.getMentions(username);
+    }
+
+    @GetMapping("/@{username}/feed")
+    public List<TweetRespDTO> getFeed(@PathVariable String username) {
+        return userService.getFeed(username);
     }
 
     @PostMapping

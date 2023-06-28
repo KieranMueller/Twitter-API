@@ -50,16 +50,17 @@ public class TweetServiceImpl implements TweetService {
             throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
         if(tweet.getContent().isBlank())
             throw new BadRequestException("Tweet Must Contain Content");
-        Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(tweet.getCredentials().getUsername());
+        Optional<User> opUser = userRepository.
+                findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
+                        tweet.getCredentials().getUsername(), tweet.getCredentials().getPassword());
         if(opUser.isEmpty())
-            throw new BadRequestException("Username '" + tweet.getCredentials().getUsername() + "' Invalid. Please Consider Signing Up!");
+            throw new BadRequestException("Username/Password Combination Invalid!");
         User user = opUser.get();
-        if(!user.getCredentials().getPassword().equals(tweet.getCredentials().getPassword()))
-            throw new BadRequestException("Invalid Password!");
         Tweet tweetEntity = tweetMapper.dtoToEntity(tweet);
         tweetEntity.setAuthor(user);
-        var allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-                'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
+        var allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+                'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1',
+                '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
         String[] arr = tweet.getContent().split(" ");
         Set<String> usernamesMentioned = new HashSet<>();
         Set<String> hashtags = new HashSet<>();
