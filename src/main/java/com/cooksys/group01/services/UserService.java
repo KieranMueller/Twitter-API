@@ -25,4 +25,10 @@ public interface UserService {
 
     void unfollowUser(String username, Credentials credentials);
 
+<<<<<<< HEAD
+=======
+	UserRespDTO getUser(String username);
+
+    List<TweetRespDTO> getFeed(String username);
+>>>>>>> 96fbe32832b69cae39f7bd613226f2b69eabbf80
 }

@@ -31,8 +31,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserRespDTO> getActiveUsers() {
-        List<User> userList = userRepository.findAll();
-        return userMapper.entitiesToDTOs(userList.stream().filter( user -> !user.isDeleted()).collect(Collectors.toList()));
+
+        List<User> users = userRepository.findAllByDeletedFalse();
+        List<UserRespDTO> usersToReturn = new ArrayList<>();
+        for(User user : users) {
+            UserRespDTO tempUser = userMapper.entityToDTO(user);
+            tempUser.setUsername(user.getCredentials().getUsername());
+            usersToReturn.add(tempUser);
+        }
+        return usersToReturn;
+    }
+
+    @Override
+    public UserRespDTO getUser(String username) {
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+        if(opUser.isEmpty())
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
+        UserRespDTO userDTO = userMapper.entityToDTO(opUser.get());
+        userDTO.setUsername(opUser.get().getCredentials().getUsername());
+        return userDTO;
     }
 
     public UserRespDTO getUserByUsername(String username) {
@@ -46,7 +63,7 @@ public class UserServiceImpl implements UserService {
     public List<UserRespDTO> getFollowers(String username) {
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
         if (opUser.isEmpty())
-            throw new NotFoundException("Unable To Find User With Username " + username);
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
         User user = opUser.get();
         List<UserRespDTO> followers = new ArrayList<>();
         for (User follower : user.getFollowers())
@@ -62,7 +79,7 @@ public class UserServiceImpl implements UserService {
     public List<UserRespDTO> getFollowing(String username) {
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
         if (opUser.isEmpty())
-            throw new NotFoundException("Unable To Find User With Username " + username);
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
         User user = opUser.get();
         List<UserRespDTO> followings = new ArrayList<>();
         for (User following : user.getFollowing())
@@ -81,13 +98,55 @@ public class UserServiceImpl implements UserService {
         if(opUser.isEmpty())
             throw new NotFoundException("Unable To Find Username '" + username + "'");
         User user = opUser.get();
-        List<Tweet> mentionedTweets = new ArrayList<>();
+        List<TweetRespDTO> mentionedTweets = new ArrayList<>();
         for(Tweet t : user.getMentionedTweets())
             if(!t.isDeleted()) {
-                t.getAuthor().getCredentials().setPassword("TOP SECRET!");
-                mentionedTweets.add(t);
+                TweetRespDTO tempTweet = tweetMapper.entityToDTO(t);
+                tempTweet.getAuthor().setUsername(t.getAuthor().getCredentials().getUsername());
+                mentionedTweets.add(tempTweet);
             }
-        return tweetMapper.entitiesToDTOs(mentionedTweets);
+        return mentionedTweets;
+    }
+
+    @Override
+    public List<TweetRespDTO> getFeed(String username) {
+        //TODO: Will need to check reply to and repost of tweets etc, Unfinished, still getting null usernames
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+        if(opUser.isEmpty())
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
+        User user = opUser.get();
+        List<TweetRespDTO> tweets = new ArrayList<>();
+        for(Tweet userTweet : user.getTweets())
+            if(!userTweet.isDeleted()) {
+                TweetRespDTO tempTweet = tweetMapper.entityToDTO(userTweet);
+                tempTweet.getAuthor().setUsername(userTweet.getAuthor().getCredentials().getUsername());
+                tweets.add(tempTweet);
+            }
+        List<User> followings = user.getFollowing();
+        for (User following : followings) {
+            for(Tweet tweet : following.getTweets()) {
+                if(!tweet.isDeleted()) {
+                    TweetRespDTO tempTweet = tweetMapper.entityToDTO(tweet);
+                    tempTweet.getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
+                    tweets.add(tempTweet);
+                }
+                for(Tweet reply : tweet.getReplyThread()) {
+                    if(reply != null && !reply.isDeleted()) {
+                        TweetRespDTO tempReply = tweetMapper.entityToDTO(reply);
+                        tempReply.getAuthor().setUsername(reply.getAuthor().getCredentials().getUsername());
+                        tweets.add(tempReply);
+                    }
+                }
+                for(Tweet repost : tweet.getRepostThread()) {
+                    if(repost != null && !repost.isDeleted()) {
+                        TweetRespDTO tempRepost = tweetMapper.entityToDTO(repost);
+                        tempRepost.getAuthor().setUsername(repost.getAuthor().getCredentials().getUsername());
+                        tweets.add(tempRepost);
+                    }
+                }
+            }
+        }
+        return tweets;
     }
 
     @Override
@@ -128,7 +187,9 @@ public class UserServiceImpl implements UserService {
             if (tempUser.getCredentials().getUsername().equals(user.getCredentials().getUsername()))
                 throw new BadRequestException("Sorry, Username " + user.getCredentials().getUsername() + " Already Exists!");
         }
-        return userMapper.entityToDTO(userRepository.save(userMapper.dtoToEntity(user)));
+        UserRespDTO userResp = userMapper.entityToDTO(userRepository.save(userMapper.dtoToEntity(user)));
+        userResp.setUsername(user.getCredentials().getUsername());
+        return userResp;
     }
 
     @Override
@@ -170,6 +231,4 @@ public class UserServiceImpl implements UserService {
             throw new NotAuthorizedException("Not authorized: Bad credentials!");
         return userOptional.get();
     }
-    
-
 }
