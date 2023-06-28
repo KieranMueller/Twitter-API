@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -240,26 +242,32 @@ public class UserServiceImpl implements UserService {
             throw new NotAuthorizedException("Not Authorized: Could Not Verify Credentials");
 
         User user = opUser.get();
-
-        if (user.getFollowing().contains(userMapper.entityToDTO(userRepository.save())))
+        // TODO: if already following user
+        if (user.getFollowing().contains(toBeFollowed))
             throw new BadRequestException("Already following " + username +"!");
 
         user.addFollowing(toBeFollowed);
         userRepository.saveAndFlush(user);
-        userRepository.saveAndFlush(toBeFollowed);
     }
 
     @Override
     public void unfollowUser(String username, Credentials credentials) {
-        User toBeUnfollowed = _getUserByUsername(username);
-        User follower = authorizeCredentials(credentials);
-        //if (!isActive(toBeUnfollowed))
-            //throw new BadRequestException("User " + username + " not found!");
-        if (!follower.getFollowing().contains(toBeUnfollowed))
-            throw new BadRequestException("Currently not following " + username +"!");
-        follower.removeFollowing(toBeUnfollowed);
-        userRepository.saveAndFlush(follower);
-        userRepository.saveAndFlush(toBeUnfollowed);
+        Optional<User> opToUnfollow = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+        if(opToUnfollow.isEmpty())
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
+        User toUnfollow = opToUnfollow.get();
+
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(credentials.getUsername(), credentials.getPassword());
+        if(opUser.isEmpty())
+            throw new NotAuthorizedException("Not Authorized: Could Not Verify Credentials");
+
+        User user = opUser.get();
+
+        if (!user.getFollowing().contains(toUnfollow))
+            throw new BadRequestException("You currently do not follow " + username +"!");
+
+        user.removeFollowing(toUnfollow);
+        userRepository.saveAndFlush(user);
     }
 
     // HELPER FUNCTIONS
