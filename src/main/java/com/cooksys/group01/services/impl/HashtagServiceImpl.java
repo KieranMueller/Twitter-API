@@ -26,6 +26,6 @@ public class HashtagServiceImpl implements HashtagService {
    public HashtagDTO getRandomHashtag() {
        List<Hashtag> tags = hashtagRepository.findAll();
        return hashtagMapper.entityToDTO(tags.get(new Random().nextInt(tags.size())));
-    }
+	}
 
 }

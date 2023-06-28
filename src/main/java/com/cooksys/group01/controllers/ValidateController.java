@@ -9,18 +9,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/validate")
+@RequestMapping("validate")
 public class ValidateController {
 
     private final ValidateService validateService;
 
-    @GetMapping("/tag/exists/{label}")
+    @GetMapping("tag/exists/{label}")
     public boolean doesHashtagExist(@PathVariable String label) {
         return validateService.doesHashtagExist(label);
     }
     
-    @GetMapping("/username/exists/@{username}")
+    @GetMapping("username/exists/@{username}")
     public boolean doesUserExist(@PathVariable String username) {
     	return validateService.doesUserExist(username);
     }
+
 }
