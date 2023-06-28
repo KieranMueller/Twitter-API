@@ -31,8 +31,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserRespDTO> getActiveUsers() {
-        List<User> userList = userRepository.findAll();
-        return userMapper.entitiesToDTOs(userList.stream().filter( user -> !user.isDeleted()).collect(Collectors.toList()));
+        // TODO: usernames being returned null due to userRespDTO modification.
+        // This is working now, left previous implementation commented out
+
+//        List<User> userList = userRepository.findAll();
+//        return userMapper.entitiesToDTOs(userList.stream().filter( user -> !user.isDeleted()).collect(Collectors.toList()));
+
+        List<User> users = userRepository.findAllByDeletedFalse();
+        List<UserRespDTO> usersToReturn = new ArrayList<>();
+        for(User user : users) {
+            UserRespDTO tempUser = userMapper.entityToDTO(user);
+            tempUser.setUsername(user.getCredentials().getUsername());
+            usersToReturn.add(tempUser);
+        }
+        return usersToReturn;
+    }
+
+    @Override
+    public UserRespDTO getUser(String username) {
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+        if(opUser.isEmpty())
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
+        UserRespDTO userDTO = userMapper.entityToDTO(opUser.get());
+        userDTO.setUsername(opUser.get().getCredentials().getUsername());
+        return userDTO;
     }
 
     @Override
@@ -163,7 +185,9 @@ public class UserServiceImpl implements UserService {
             if (tempUser.getCredentials().getUsername().equals(user.getCredentials().getUsername()))
                 throw new BadRequestException("Sorry, Username " + user.getCredentials().getUsername() + " Already Exists!");
         }
-        return userMapper.entityToDTO(userRepository.save(userMapper.dtoToEntity(user)));
+        UserRespDTO userResp = userMapper.entityToDTO(userRepository.save(userMapper.dtoToEntity(user)));
+        userResp.setUsername(user.getCredentials().getUsername());
+        return userResp;
     }
 
     @Override
@@ -208,11 +232,6 @@ public class UserServiceImpl implements UserService {
         if (userOptional.isEmpty() || userOptional.get().isDeleted())
             throw new NotAuthorizedException("Not authorized: Bad credentials!");
         return userOptional.get();
-    }
-    
-    public UserRespDTO getUser(String username) {
-    	User userRet = getUserByUsername(username);
-    	return userMapper.entityToDTO(userRet);
     }
 
 }
