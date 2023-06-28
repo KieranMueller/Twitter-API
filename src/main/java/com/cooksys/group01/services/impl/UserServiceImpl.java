@@ -57,6 +57,7 @@ public class UserServiceImpl implements UserService {
         if (user == null || user.isDeleted())
             throw new NotFoundException("User with username '" + username + "' not found");
         return userMapper.entityToDTO(user);
+
     }
 
     @Override

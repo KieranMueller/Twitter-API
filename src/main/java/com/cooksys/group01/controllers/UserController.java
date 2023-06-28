@@ -4,8 +4,13 @@ import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.dtos.UserReqDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.cooksys.group01.entities.embeddable.Credentials;
 import com.cooksys.group01.services.UserService;
+=======
+import com.cooksys.group01.services.UserService;
+import lombok.RequiredArgsConstructor;
+>>>>>>> 96fbe32832b69cae39f7bd613226f2b69eabbf80
 =======
 import com.cooksys.group01.services.UserService;
 import lombok.RequiredArgsConstructor;
