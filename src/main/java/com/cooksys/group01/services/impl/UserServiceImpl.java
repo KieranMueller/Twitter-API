@@ -277,10 +277,4 @@ public class UserServiceImpl implements UserService {
         return userOptional.orElse(null);
     }
 
-    private User authorizeCredentials(Credentials credentials) {
-        Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(credentials.getUsername(), credentials.getPassword());
-        if (opUser.isEmpty() || opUser.get().isDeleted())
-            throw new NotAuthorizedException("Not authorized: Bad credentials!");
-        return opUser.get();
-    }
 }
