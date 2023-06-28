@@ -14,7 +14,6 @@ import com.cooksys.group01.mappers.UserMapper;
 import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.UserService;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.PropertyValueException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -39,12 +38,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserRespDTO> getFollowers(String username) {
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
-        if (opUser.isEmpty()) throw new NotFoundException("Unable To Find User With Username " + username);
+        if (opUser.isEmpty())
+            throw new NotFoundException("Unable To Find User With Username " + username);
+        User user = opUser.get();
         List<UserRespDTO> followers = new ArrayList<>();
-        for (User follower : opUser.get().getFollowers())
+        for (User follower : user.getFollowers())
             if (!follower.isDeleted()) {
                 UserRespDTO tempUser = userMapper.entityToDTO(follower);
-                tempUser.getCredentials().setPassword("TOP SECRET!");
+                tempUser.setUsername(follower.getCredentials().getUsername());
                 followers.add(tempUser);
             }
         return followers;
@@ -53,12 +54,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserRespDTO> getFollowing(String username) {
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
-        if (opUser.isEmpty()) throw new NotFoundException("Unable To Find User With Username " + username);
+        if (opUser.isEmpty())
+            throw new NotFoundException("Unable To Find User With Username " + username);
+        User user = opUser.get();
         List<UserRespDTO> followings = new ArrayList<>();
-        for (User following : opUser.get().getFollowing())
+        for (User following : user.getFollowing())
             if (!following.isDeleted()) {
                 UserRespDTO tempUser = userMapper.entityToDTO(following);
-                tempUser.getCredentials().setPassword("TOP SECRET!");
+                tempUser.setUsername(following.getCredentials().getUsername());
                 followings.add(tempUser);
             }
         return followings;
@@ -73,8 +76,10 @@ public class UserServiceImpl implements UserService {
         User user = opUser.get();
         List<Tweet> mentionedTweets = new ArrayList<>();
         for(Tweet t : user.getMentionedTweets())
-            if(!t.isDeleted())
+            if(!t.isDeleted()) {
+                t.getAuthor().getCredentials().setPassword("TOP SECRET!");
                 mentionedTweets.add(t);
+            }
         return tweetMapper.entitiesToDTOs(mentionedTweets);
     }
 
@@ -96,7 +101,7 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Username Must Be 30 Characters Or Less");
         if(user.getCredentials().getPassword().length() < 6 || user.getCredentials().getPassword().length() > 30)
             throw new BadRequestException("Password Must Be Between 6-30 Characters In Length");
-        var allowedCharacters = new ArrayList<Character>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+        var allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
                 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
         String username = user.getCredentials().getUsername().toUpperCase();
         for(int i = 0; i < username.length(); i++)

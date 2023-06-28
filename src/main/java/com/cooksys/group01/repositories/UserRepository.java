@@ -12,7 +12,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    List<User> findAllByIdAndDeletedFalse(Long id);
+    Optional<User> findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(String username, String password);
+
     Optional<User> findByCredentialsUsernameAndDeletedFalse(String username);
 
     Optional<User> findByCredentialsUsernameAndDeletedTrue(String username);
@@ -21,4 +22,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByCredentialsUsername(String username);
 
+    List<User> findAllByDeletedFalse();
 }

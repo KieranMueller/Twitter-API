@@ -7,9 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -72,6 +70,10 @@ public class User {
     // testing this out
     public void addMentionedTweet(Tweet tweet) {
         mentionedTweets.add(tweet);
+    }
+
+    public void addLikedTweet(Tweet tweet) {
+        likedTweets.add(tweet);
     }
 
     public void addFollowing(User toBeFollowed) {

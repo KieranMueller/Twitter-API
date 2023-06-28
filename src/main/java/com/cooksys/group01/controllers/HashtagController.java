@@ -1,7 +1,6 @@
 package com.cooksys.group01.controllers;
 
 
-import java.util.List;
 import com.cooksys.group01.dtos.HashtagDTO;
 import com.cooksys.group01.services.HashtagService;
 import lombok.RequiredArgsConstructor;
@@ -11,10 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cooksys.group01.dtos.HashtagDTO;
-import com.cooksys.group01.services.HashtagService;
-
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,4 +29,5 @@ public class HashtagController {
     public HashtagDTO getRandomHashtag() {
         return hashtagService.getRandomHashtag();
     }
+
 }
