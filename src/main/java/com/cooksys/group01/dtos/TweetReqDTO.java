@@ -12,5 +12,5 @@ public class TweetReqDTO {
 
     private String content;
 
-    private Credentials credentials;
+    private CredentialsDTO credentials;
 }

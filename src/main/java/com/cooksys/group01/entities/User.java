@@ -69,10 +69,13 @@ public class User {
     @ManyToMany(mappedBy = "followers")
     private List<User> following;
 
+    // testing this out
+    public void addMentionedTweet(Tweet tweet) {
+        mentionedTweets.add(tweet);
+    }
+
     public void addFollowing(User toBeFollowed) {
     }
     public void removeFollowing(User toBeUnfollowed) {
     }
-
-
 }
