@@ -162,4 +162,9 @@ public class UserServiceImpl implements UserService {
             throw new NotAuthorizedException("Not authorized: Bad credentials!");
         return userOptional.get();
     }
+    
+    public UserRespDTO getUser(String username) {
+    	User userRet = getUserByUsername(username);
+    	return userMapper.entityToDTO(userRet);
+    }
 }

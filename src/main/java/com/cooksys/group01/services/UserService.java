@@ -22,4 +22,6 @@ public interface UserService {
     void followUser(String username, Credentials credentials);
 
     void unfollowUser(String username, Credentials credentials);
+
+	UserRespDTO getUser(String username);
 }
