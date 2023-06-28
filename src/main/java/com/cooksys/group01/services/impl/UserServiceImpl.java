@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -29,6 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserRespDTO> getActiveUsers() {
+
         List<User> users = userRepository.findAllByDeletedFalse();
         List<UserRespDTO> usersToReturn = new ArrayList<>();
         for(User user : users) {
@@ -47,6 +49,14 @@ public class UserServiceImpl implements UserService {
         UserRespDTO userDTO = userMapper.entityToDTO(opUser.get());
         userDTO.setUsername(opUser.get().getCredentials().getUsername());
         return userDTO;
+    }
+
+    public UserRespDTO getUserByUsername(String username) {
+        User user = _getUserByUsername(username);
+        if (user == null || user.isDeleted())
+            throw new NotFoundException("User with username '" + username + "' not found");
+        return userMapper.entityToDTO(user);
+
     }
 
     @Override
@@ -222,46 +232,49 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void followUser(String username, Credentials credentials) {
-        User toBeFollowed = getUserByUsername(username);
-        User follower = authorizeCredentials(credentials);
-        if (!isActive(toBeFollowed))
-            throw new BadRequestException("User + " + username + " not found!");
-        if (follower.getFollowing().contains(toBeFollowed))
+        Optional<User> opToBeFollowed = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+        if(opToBeFollowed.isEmpty())
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
+        User toBeFollowed = opToBeFollowed.get();
+
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(credentials.getUsername(), credentials.getPassword());
+        if(opUser.isEmpty())
+            throw new NotAuthorizedException("Not Authorized: Could Not Verify Credentials");
+
+        User user = opUser.get();
+        // TODO: if already following user
+        if (user.getFollowing().contains(toBeFollowed))
             throw new BadRequestException("Already following " + username +"!");
-        follower.addFollowing(toBeFollowed);
-        userRepository.saveAndFlush(follower);
-        userRepository.saveAndFlush(toBeFollowed);
+
+        user.addFollowing(toBeFollowed);
+        userRepository.saveAndFlush(user);
     }
 
     @Override
     public void unfollowUser(String username, Credentials credentials) {
-        User toBeUnfollowed = getUserByUsername(username);
-        User follower = authorizeCredentials(credentials);
-        if (!isActive(toBeUnfollowed))
-            throw new BadRequestException("User " + username + " not found!");
-        if (!follower.getFollowing().contains(toBeUnfollowed))
-            throw new BadRequestException("Currently not following " + username +"!");
-        follower.removeFollowing(toBeUnfollowed);
-        userRepository.saveAndFlush(follower);
-        userRepository.saveAndFlush(toBeUnfollowed);
+        Optional<User> opToUnfollow = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+        if(opToUnfollow.isEmpty())
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
+        User toUnfollow = opToUnfollow.get();
+
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(credentials.getUsername(), credentials.getPassword());
+        if(opUser.isEmpty())
+            throw new NotAuthorizedException("Not Authorized: Could Not Verify Credentials");
+
+        User user = opUser.get();
+
+        if (!user.getFollowing().contains(toUnfollow))
+            throw new BadRequestException("You currently do not follow " + username +"!");
+
+        user.removeFollowing(toUnfollow);
+        userRepository.saveAndFlush(user);
     }
 
     // HELPER FUNCTIONS
 
-    private boolean isActive(User user) {
-        return user != null && !user.isDeleted();
-    }
-
-    private User getUserByUsername(String username) {
+    private User _getUserByUsername(String username) {
         Optional<User> userOptional = userRepository.findByCredentialsUsername(username);
         return userOptional.orElse(null);
-    }
-
-    private User authorizeCredentials(Credentials credentials) {
-        Optional<User> userOptional = userRepository.findOneByCredentials(credentials);
-        if (userOptional.isEmpty() || userOptional.get().isDeleted())
-            throw new NotAuthorizedException("Not authorized: Bad credentials!");
-        return userOptional.get();
     }
 
 }

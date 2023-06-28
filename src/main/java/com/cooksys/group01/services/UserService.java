@@ -11,6 +11,8 @@ public interface UserService {
 
     List<UserRespDTO> getActiveUsers();
 
+    UserRespDTO getUserByUsername(String username);
+
     UserRespDTO createUser(UserReqDTO user);
 
     List<UserRespDTO> getFollowers(String username);
