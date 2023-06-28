@@ -77,7 +77,9 @@ public class User {
     }
 
     public void addFollowing(User toBeFollowed) {
+        this.following.add(toBeFollowed);
     }
     public void removeFollowing(User toBeUnfollowed) {
+        following.remove(toBeUnfollowed);
     }
 }

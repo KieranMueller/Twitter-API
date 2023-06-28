@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -195,14 +194,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void followUser(String username, Credentials credentials) {
-        User toBeFollowed = _getUserByUsername(username);
-        User follower = authorizeCredentials(credentials);
-        //if (!isActive(toBeFollowed))
-            //throw new BadRequestException("User + " + username + " not found!");
-        if (follower.getFollowing().contains(toBeFollowed))
+        Optional<User> opToBeFollowed = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+        if(opToBeFollowed.isEmpty())
+            throw new NotFoundException("Unable To Find Username '" + username + "'");
+        User toBeFollowed = opToBeFollowed.get();
+
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(credentials.getUsername(), credentials.getPassword());
+        if(opUser.isEmpty())
+            throw new NotAuthorizedException("Not Authorized: Could Not Verify Credentials");
+
+        User user = opUser.get();
+
+        if (user.getFollowing().contains(userMapper.entityToDTO(userRepository.save())))
             throw new BadRequestException("Already following " + username +"!");
-        follower.addFollowing(toBeFollowed);
-        userRepository.saveAndFlush(follower);
+
+        user.addFollowing(toBeFollowed);
+        userRepository.saveAndFlush(user);
         userRepository.saveAndFlush(toBeFollowed);
     }
 
@@ -227,9 +234,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private User authorizeCredentials(Credentials credentials) {
-        Optional<User> userOptional = userRepository.findOneByCredentials(credentials);
-        if (userOptional.isEmpty() || userOptional.get().isDeleted())
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(credentials.getUsername(), credentials.getPassword());
+        if (opUser.isEmpty() || opUser.get().isDeleted())
             throw new NotAuthorizedException("Not authorized: Bad credentials!");
-        return userOptional.get();
+        return opUser.get();
     }
 }
