@@ -36,7 +36,7 @@ public class HashtagServiceImpl implements HashtagService {
    public HashtagDTO getRandomHashtag() {
        List<Hashtag> tags = hashtagRepository.findAll();
        return hashtagMapper.entityToDTO(tags.get(new Random().nextInt(tags.size())));
-    }
+	}
 
 	@Override
 	public List<TweetRespDTO> getTweetsByTag(String label) {

@@ -7,6 +7,7 @@ import com.cooksys.group01.entities.Hashtag;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
 import com.cooksys.group01.exceptions.BadRequestException;
+import com.cooksys.group01.exceptions.NotAuthorizedException;
 import com.cooksys.group01.exceptions.NotFoundException;
 import com.cooksys.group01.mappers.TweetMapper;
 import com.cooksys.group01.repositories.HashtagRepository;
@@ -110,20 +111,21 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     public ResponseEntity<HttpStatus> likeTweet(Long id, CredentialsDTO credentials) {
+        if(credentials.getPassword() == null || credentials.getUsername() == null)
+            throw new NotAuthorizedException("Unable To Verify Credentials");
         Optional<User> opUser = userRepository.
                 findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(credentials.getUsername(), credentials.getPassword());
         if(opUser.isEmpty())
-            throw new BadRequestException("Could Not Verify Credentials");
+            throw new NotAuthorizedException("Unable To Verify Credentials");
         Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
         if(opTweet.isEmpty())
             throw new NotFoundException("Unable To Find Tweet With ID " + id);
         Tweet tweet = opTweet.get();
         User user = opUser.get();
-        user.addLikedTweet(tweet);
+        if(!user.getLikedTweets().contains(tweet))
+            user.addLikedTweet(tweet);
         userRepository.saveAndFlush(user);
-
-
-        return null;
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Override
