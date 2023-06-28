@@ -29,4 +29,9 @@ public class ValidateController {
     public List<HashtagDTO> testGetAll() {
         return validateService.getAllHashtags();
     }
+    
+    @GetMapping("/username/exists/@{username}")
+    public boolean doesUserExist(@PathVariable String username) {
+    	return validateService.doesUserExist(username);
+    }
 }
