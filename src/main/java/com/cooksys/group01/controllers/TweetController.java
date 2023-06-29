@@ -59,5 +59,4 @@ public class TweetController {
     public TweetRespDTO repostById(@PathVariable Long id, @RequestBody CredentialsDTO credentials) {
     	return tweetService.repostById(id, credentials);
     }
-
 }
