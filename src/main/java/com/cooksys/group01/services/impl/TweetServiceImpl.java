@@ -30,6 +30,10 @@ public class TweetServiceImpl implements TweetService {
 	private final UserRepository userRepository;
 	private final HashtagRepository hashtagRepository;
 	private final TweetMapper tweetMapper;
+  
+  List<Character> allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+            'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1',
+            '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
 
 	@Override
 	public List<TweetRespDTO> getRepliesById(Long id) {
@@ -80,8 +84,6 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     public TweetRespDTO createTweet(TweetReqDTO tweet) {
-        if(tweet == null)
-            throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
         if(tweet.getContent() == null || tweet.getCredentials() == null)
             throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
         if(tweet.getContent().isBlank())
@@ -94,9 +96,6 @@ public class TweetServiceImpl implements TweetService {
         User user = opUser.get();
         Tweet tweetEntity = tweetMapper.dtoToEntity(tweet);
         tweetEntity.setAuthor(user);
-        var allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
-                'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1',
-                '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
         String[] arr = tweet.getContent().split(" ");
         Set<String> usernamesMentioned = new HashSet<>();
         Set<String> hashtags = new HashSet<>();
@@ -136,6 +135,7 @@ public class TweetServiceImpl implements TweetService {
         }
         for(String possibleUser : usernamesMentioned) {
             Optional<User> foundUser = userRepository.findByCredentialsUsernameAndDeletedFalse(possibleUser);
+            // Might need to save each user after this
             foundUser.ifPresent(value -> value.addMentionedTweet(tweetEntity));
         }
         tweetEntity.setHashtags(savedTags);
