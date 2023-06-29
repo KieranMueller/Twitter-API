@@ -57,9 +57,15 @@ public class UserServiceImpl implements UserService {
         Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
         if (opUser.isEmpty())
             throw new NotFoundException("Unable To Find User With Username " + username);
-        List<Tweet> tweets = new ArrayList<>();
-        tweets.addAll(opUser.get().getTweets());
-        return tweetMapper.entitiesToDTOs(tweets);
+        List<Tweet> tweets = new ArrayList<>(opUser.get().getTweets());
+        List<TweetRespDTO> tweetDTOs = new ArrayList<>();
+        for(Tweet tweet : tweets)
+            if(!tweet.isDeleted()) {
+                TweetRespDTO tweetDTO = tweetMapper.entityToDTO(tweet);
+                tweetDTO.getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
+                tweetDTOs.add(tweetDTO);
+            }
+        return tweetDTOs;
     }
 
     @Override
