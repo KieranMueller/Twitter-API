@@ -259,6 +259,7 @@ public class UserServiceImpl implements UserService {
         user.removeFollowing(toUnfollow);
         userRepository.saveAndFlush(user);
     }
+
     @Override
     public UserRespDTO deleteUser(String username, CredentialsDTO credentials) {
         if (credentials.getUsername() == null || credentials.getPassword() == null)
