@@ -19,6 +19,8 @@ public interface TweetService {
 
     List<UserRespDTO> getMentionsById(Long id);
 
+    List<TweetRespDTO> getRepostsById(Long id);
+
     TweetRespDTO createTweet(TweetReqDTO tweet);
 
     ResponseEntity<HttpStatus> likeTweet(Long id, CredentialsDTO credentials);

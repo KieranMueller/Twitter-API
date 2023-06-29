@@ -162,6 +162,12 @@ public class TweetServiceImpl implements TweetService {
     }
 
     @Override
+    public List<TweetRespDTO> getRepostsById(Long id) {
+
+        return null;
+    }
+
+    @Override
     public TweetRespDTO createTweet(TweetReqDTO tweet) {
         if(tweet.getContent() == null || tweet.getCredentials() == null)
             throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
