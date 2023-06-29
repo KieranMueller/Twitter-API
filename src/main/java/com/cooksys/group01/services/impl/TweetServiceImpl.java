@@ -1,12 +1,24 @@
 package com.cooksys.group01.services.impl;
 
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
 import com.cooksys.group01.dtos.CredentialsDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
+import com.cooksys.group01.dtos.UserRespDTO;
 import com.cooksys.group01.entities.Hashtag;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
-import com.cooksys.group01.entities.embeddable.Credentials;
 import com.cooksys.group01.exceptions.BadRequestException;
 import com.cooksys.group01.exceptions.NotAuthorizedException;
 import com.cooksys.group01.exceptions.NotFoundException;
@@ -16,14 +28,8 @@ import com.cooksys.group01.repositories.HashtagRepository;
 import com.cooksys.group01.repositories.TweetRepository;
 import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.TweetService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
-import java.sql.Timestamp;
-import java.util.*;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -226,5 +232,23 @@ public class TweetServiceImpl implements TweetService {
         tweetDTO.getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
         return tweetDTO;
     }
+
+	@Override
+	public List<UserRespDTO> getUsersByLikedTweet(Long id) {
+		 Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+	        if(opTweet.isEmpty())
+	            throw new NotFoundException("Unable To Find Tweet With ID " + id);
+	        Tweet tweet = opTweet.get();
+	        List<User> users = tweet.getLikes();
+	        List<UserRespDTO> replyDTOs = new ArrayList<>();
+	        for(User likes : users)
+	            if(!likes.isDeleted()) {
+	            	String userName = likes.getCredentials().getUsername();
+	                UserRespDTO tempLikesDTO = userMapper.entityToDTO(likes);
+	                tempLikesDTO.setUsername(userName);
+	                replyDTOs.add(tempLikesDTO);
+	            }
+		    return replyDTOs;
+	}
 
 }

@@ -3,6 +3,7 @@ package com.cooksys.group01.controllers;
 import com.cooksys.group01.dtos.CredentialsDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
+import com.cooksys.group01.dtos.UserRespDTO;
 import com.cooksys.group01.services.TweetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -58,6 +59,11 @@ public class TweetController {
     @DeleteMapping("{id}")
     public TweetRespDTO deleteTweetById(@PathVariable Long id) {
         return tweetService.deleteTweetById(id);
+    }
+    
+    @GetMapping("{id}/likes")
+    public List<UserRespDTO> getUsersByLikedTweet(@PathVariable Long id) {
+    	return tweetService.getUsersByLikedTweet(id);
     }
 
 }
