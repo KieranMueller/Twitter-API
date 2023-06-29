@@ -60,6 +60,11 @@ public class UserController {
     public UserRespDTO createUser(@RequestBody UserReqDTO user) {
         return userService.createUser(user);
     }
+    
+    @GetMapping("/@{username}/tweets")
+    public List<TweetRespDTO> getUserTweets(@PathVariable String username){
+    	return userService.getUserTweets(username);
+    }
 
     @PostMapping("@{username}/follow")
     public void followUser(@PathVariable String username, @RequestBody Credentials credentials) {

@@ -26,15 +26,39 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TweetServiceImpl implements TweetService {
 
-    private final TweetRepository tweetRepository;
-    private final UserRepository userRepository;
-    private final HashtagRepository hashtagRepository;
-    private final TweetMapper tweetMapper;
-
-    List<Character> allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+	private final TweetRepository tweetRepository;
+	private final UserRepository userRepository;
+	private final HashtagRepository hashtagRepository;
+	private final TweetMapper tweetMapper;
+  
+  List<Character> allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
             'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1',
             '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
 
+	@Override
+	public List<TweetRespDTO> getRepliesById(Long id) {
+		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+		if (opTweet.isEmpty())
+			throw new NotFoundException("Unable To Find Tweet With ID " + id);
+		List<Tweet> respTweet = opTweet.get().getReplyThread();
+		return tweetMapper.entitiesToDTOs(respTweet);
+	}
+
+	@Override
+	public TweetRespDTO repostById(Long id, CredentialsDTO credentials) {
+		Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
+				credentials.getUsername(), credentials.getPassword());
+		if (opUser.isEmpty())
+			throw new BadRequestException("Could Not Verify Credentials");
+		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+		if (opTweet.isEmpty())
+			throw new NotFoundException("Unable To Find Tweet With ID " + id);
+		Tweet tweet = opTweet.get();
+		User user = opUser.get();
+		
+		return null;
+	}
+  
     @Override
     public List<TweetRespDTO> getAllTweets() {
         List<Tweet> allTweets = tweetRepository.findByDeletedFalseOrderByPostedDesc();
