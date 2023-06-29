@@ -12,4 +12,5 @@ public interface ValidateService {
 
 	boolean doesUserExist(String username);
 
+    boolean isUsernameAvailable(String username);
 }
