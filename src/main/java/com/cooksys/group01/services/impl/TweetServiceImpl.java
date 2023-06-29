@@ -46,9 +46,8 @@ public class TweetServiceImpl implements TweetService {
 
 	@Override
 	public TweetRespDTO repostById(Long id, CredentialsDTO credentials) {
-		if (credentials.getUsername() == null || credentials.getPassword() == null) {
+		if (credentials.getUsername() == null || credentials.getPassword() == null)
 			throw new BadRequestException("Could not verify credentials");
-		}
 		Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
 				credentials.getUsername(), credentials.getPassword());
 		if (opUser.isEmpty())
@@ -58,12 +57,11 @@ public class TweetServiceImpl implements TweetService {
 			throw new NotFoundException("Unable to find tweet with ID " + id);
 		Tweet tweet = opTweet.get();
 		User user = opUser.get();
-		
 		Tweet repost = tweetRepository.save(new Tweet(null, user, null, false, null, null, null, null, null, null, null, tweet));
-		TweetRespDTO respDTO = tweetMapper.entityToDTO(repost);
-		respDTO.getAuthor().setUsername(repost.getAuthor().getCredentials().getUsername());
-		respDTO.getRepostOf().getAuthor().setUsername(respDTO.getRepostOf().getAuthor().getUsername());
-		return new TweetRespDTO();
+		TweetRespDTO repostDTO = tweetMapper.entityToDTO(repost);
+		repostDTO.getAuthor().setUsername(repost.getAuthor().getCredentials().getUsername());
+		repostDTO.getRepostOf().getAuthor().setUsername(repost.getRepostOf().getAuthor().getCredentials().getUsername());
+		return repostDTO;
 	}
   
     @Override

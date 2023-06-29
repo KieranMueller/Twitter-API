@@ -22,5 +22,6 @@ public interface TweetService {
 
     List<TweetRespDTO> getRepliesById(Long id);
 
-	TweetRespDTO repostById(Long id, CredentialsDTO credentials);
+    TweetRespDTO repostById(Long id, CredentialsDTO credentials);
+
 }
