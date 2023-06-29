@@ -1,10 +1,5 @@
 package com.cooksys.group01.services.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import org.springframework.stereotype.Service;
 import com.cooksys.group01.dtos.*;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
@@ -12,13 +7,13 @@ import com.cooksys.group01.entities.embeddable.Credentials;
 import com.cooksys.group01.exceptions.BadRequestException;
 import com.cooksys.group01.exceptions.NotAuthorizedException;
 import com.cooksys.group01.exceptions.NotFoundException;
-import com.cooksys.group01.mappers.ProfileMapper;
 import com.cooksys.group01.mappers.TweetMapper;
 import com.cooksys.group01.mappers.UserMapper;
 import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.UserService;
-import com.cooksys.group01.services.ValidateService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,8 +25,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final TweetMapper tweetMapper;
-  	private final ValidateService validateService;
-	  private final ProfileMapper profileMapper;
 
     private final List<Character> allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E',
             'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y',
@@ -58,16 +51,16 @@ public class UserServiceImpl implements UserService {
         userDTO.setUsername(opUser.get().getCredentials().getUsername());
         return userDTO;
     }
-  
-  	@Override
-	public List<TweetRespDTO> getUserTweets(String username) {
-		Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
-		if (opUser.isEmpty())
-			throw new NotFoundException("Unable To Find User With Username " + username);
-		List<Tweet> tweets = new ArrayList<>();
-		tweets.addAll(opUser.get().getTweets());
-		return tweetMapper.entitiesToDTOs(tweets);
-	}
+
+    @Override
+    public List<TweetRespDTO> getUserTweets(String username) {
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+        if (opUser.isEmpty())
+            throw new NotFoundException("Unable To Find User With Username " + username);
+        List<Tweet> tweets = new ArrayList<>();
+        tweets.addAll(opUser.get().getTweets());
+        return tweetMapper.entitiesToDTOs(tweets);
+    }
 
     @Override
     public List<UserRespDTO> getFollowers(String username) {

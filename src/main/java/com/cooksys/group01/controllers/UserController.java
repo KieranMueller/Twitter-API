@@ -61,7 +61,7 @@ public class UserController {
         return userService.createUser(user);
     }
     
-    @GetMapping("/@{username}/tweets")
+    @GetMapping("@{username}/tweets")
     public List<TweetRespDTO> getUserTweets(@PathVariable String username){
     	return userService.getUserTweets(username);
     }
