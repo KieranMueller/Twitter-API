@@ -34,12 +34,10 @@ public class ValidateServiceImpl implements ValidateService {
     public List<HashtagDTO> getAllHashtags() {
         return hashtagMapper.entitiesToDTOs(hashtagRepository.findAll());
     }
-    
 
     @Override
 	public boolean doesUserExist(String username) {
 		Optional<User> userEx = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
-		if (userEx.isPresent()) return true;
-		return false;
-	}
+        return userEx.isPresent();
+    }
 }
