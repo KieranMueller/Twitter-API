@@ -27,7 +27,7 @@ public class HashtagController {
         return hashtagService.getRandomHashtag();
     }
 
-    @GetMapping("/{label}")
+    @GetMapping("{label}")
     public List<TweetRespDTO> getTweetsByTag(@PathVariable String label) {
         return hashtagService.getTweetsByTag(label);
     }
