@@ -6,6 +6,7 @@ import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.entities.Hashtag;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
+import com.cooksys.group01.entities.embeddable.Credentials;
 import com.cooksys.group01.exceptions.BadRequestException;
 import com.cooksys.group01.exceptions.NotAuthorizedException;
 import com.cooksys.group01.exceptions.NotFoundException;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -58,7 +60,42 @@ public class TweetServiceImpl implements TweetService {
 		
 		return new TweetRespDTO();
 	}
-  
+
+    @Override
+    public TweetRespDTO replyToTweet(Long id, TweetReqDTO tweetReqDTO) {
+        Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+        if(opTweet.isEmpty()) {
+            throw new NotFoundException("Unable To Find Tweet With ID " + id);
+        }
+
+        Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
+                tweetReqDTO.getCredentials().getUsername(), tweetReqDTO.getCredentials().getPassword());
+        if(opUser.isEmpty()) {
+            throw new NotAuthorizedException("Not Authorized: Unable To Verify Credentials");
+        }
+
+        if(tweetReqDTO.getContent().isEmpty()) {
+            throw new BadRequestException("Content Cannot Be Empty!");
+        }
+
+        User user = opUser.get();
+
+        TweetReqDTO tweetReplyingToReqDTO = tweetMapper.responseDtoToRequestDto(getTweetById(id));
+        Tweet tweetReplyingTo = tweetMapper.dtoToEntity(tweetReplyingToReqDTO);
+
+        TweetRespDTO replyDTO = createTweet(tweetReqDTO);
+        Tweet replyEntity = tweetMapper.responseDtoToEntity(replyDTO);
+        replyEntity.setContent(tweetReqDTO.getContent());
+        replyEntity.setAuthor(user);
+        replyEntity.setInReplyTo(tweetReplyingTo);
+        tweetRepository.save(tweetReplyingTo);
+        TweetRespDTO reply = tweetMapper.entityToDTO(tweetRepository.saveAndFlush(replyEntity));
+        reply.getAuthor().setUsername(user.getCredentials().getUsername());
+        reply.setContent(tweetReqDTO.getContent());
+
+        return reply;
+    }
+
     @Override
     public List<TweetRespDTO> getAllTweets() {
         List<Tweet> allTweets = tweetRepository.findByDeletedFalseOrderByPostedDesc();
