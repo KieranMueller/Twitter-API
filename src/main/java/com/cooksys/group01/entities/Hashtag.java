@@ -36,4 +36,8 @@ public class Hashtag {
 
     @ManyToMany(mappedBy = "hashtags")
     private List<Tweet> tweetsWithHashtag;
+
+    public void addTweetWithHashtag(Tweet tweet) {
+        tweetsWithHashtag.add(tweet);
+    }
 }

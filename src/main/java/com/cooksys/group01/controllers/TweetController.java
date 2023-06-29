@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/tweets")
+@RequestMapping("tweets")
 public class TweetController {
 
     private final TweetService tweetService;
@@ -32,7 +32,7 @@ public class TweetController {
         return tweetService.getAllTweets();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("{id}")
     public TweetRespDTO getTweetById(@PathVariable Long id) {
         return tweetService.getTweetById(id);
     }
@@ -43,12 +43,12 @@ public class TweetController {
         return tweetService.createTweet(tweet);
     }
 
-    @PostMapping("/{id}/like")
+    @PostMapping("{id}/like")
     public ResponseEntity<HttpStatus> likeTweet(@PathVariable Long id, @RequestBody CredentialsDTO credentials) {
         return tweetService.likeTweet(id, credentials);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("{id}")
     public TweetRespDTO deleteTweetById(@PathVariable Long id) {
         return tweetService.deleteTweetById(id);
     }
