@@ -104,11 +104,10 @@ public class TweetServiceImpl implements TweetService {
         reply.setInReplyTo(tweet);
         reply.setAuthor(user);
         Tweet savedReply = tweetRepository.save(reply);
-        //
+
         tweet.addReply(savedReply);
         tweetRepository.save(tweet);
-//        tweet.setReplyThread(List.of(savedReply));
-        //
+//
         TweetRespDTO replyDTO = tweetMapper.entityToDTO(savedReply);
         replyDTO.setAuthor(userMapper.entityToDTO(user));
         replyDTO.getAuthor().setUsername(user.getCredentials().getUsername());
@@ -137,6 +136,35 @@ public class TweetServiceImpl implements TweetService {
         TweetRespDTO tweetDTO = tweetMapper.entityToDTO(tweet);
         tweetDTO.getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
         return tweetDTO;
+    }
+
+    @Override
+    public List<UserRespDTO> getMentionsById(Long id) {
+        Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+        if(opTweet.isEmpty()) {
+            throw new NotFoundException("Unable To Find Tweet With ID " + id + "!");
+        }
+        Tweet tweet = opTweet.get();
+
+        List<User> users = new ArrayList<>();
+
+        for(User possibleUser : tweet.getMentionedUsers()) {
+            String username = possibleUser.getCredentials().getUsername();
+            Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(username);
+            if(opUser.isPresent()) {
+                User user = opUser.get();
+                users.add(user);
+            }
+        }
+
+        List<UserRespDTO> userRespDTOs = new ArrayList<>();
+        for(User user : users) {
+            UserRespDTO userDTO = userMapper.entityToDTO(user);
+            userDTO.setUsername(user.getCredentials().getUsername());
+            userRespDTOs.add(userDTO);
+        }
+
+        return userRespDTOs;
     }
 
     @Override
