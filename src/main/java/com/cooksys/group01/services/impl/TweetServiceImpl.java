@@ -144,8 +144,12 @@ public class TweetServiceImpl implements TweetService {
         Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
         if(opTweet.isEmpty())
             throw new NotFoundException("Unable To Find Tweet With ID " + id);
-        opTweet.get().setDeleted(true);
-        return tweetMapper.entityToDTO(tweetRepository.save(opTweet.get()));
+        Tweet tweet = opTweet.get();
+        TweetRespDTO tweetDTO = tweetMapper.entityToDTO(tweet);
+        tweet.setDeleted(true);
+        tweetRepository.save(tweet);
+        tweetDTO.getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
+        return tweetDTO;
     }
 
 }
