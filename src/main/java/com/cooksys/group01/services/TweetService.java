@@ -3,6 +3,7 @@ package com.cooksys.group01.services;
 import com.cooksys.group01.dtos.CredentialsDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
+import com.cooksys.group01.dtos.UserRespDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -15,6 +16,8 @@ public interface TweetService {
     List<TweetRespDTO> getAllTweets();
 
     TweetRespDTO getTweetById(Long id);
+
+    List<UserRespDTO> getMentionsById(Long id);
 
     TweetRespDTO createTweet(TweetReqDTO tweet);
 

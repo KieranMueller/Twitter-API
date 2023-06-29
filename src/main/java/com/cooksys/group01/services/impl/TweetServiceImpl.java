@@ -3,6 +3,7 @@ package com.cooksys.group01.services.impl;
 import com.cooksys.group01.dtos.CredentialsDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
+import com.cooksys.group01.dtos.UserRespDTO;
 import com.cooksys.group01.entities.Hashtag;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
@@ -131,6 +132,12 @@ public class TweetServiceImpl implements TweetService {
         TweetRespDTO tweetDTO = tweetMapper.entityToDTO(tweet);
         tweetDTO.getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
         return tweetDTO;
+    }
+
+    @Override
+    public List<UserRespDTO> getMentionsById(Long id) {
+
+        return null;
     }
 
     @Override

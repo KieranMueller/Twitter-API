@@ -3,6 +3,7 @@ package com.cooksys.group01.controllers;
 import com.cooksys.group01.dtos.CredentialsDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
+import com.cooksys.group01.dtos.UserRespDTO;
 import com.cooksys.group01.services.TweetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,10 @@ public class TweetController {
     	return tweetService.getRepliesById(id);
     }
 
+    @GetMapping("{id}/mentions")
+    public List<UserRespDTO> getMentionsById(@PathVariable Long id) {
+        return tweetService.getMentionsById(id);
+    }
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TweetRespDTO createTweet(@RequestBody TweetReqDTO tweet) {
