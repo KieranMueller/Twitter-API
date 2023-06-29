@@ -29,4 +29,6 @@ public interface TweetService {
 
     TweetRespDTO replyToTweet(Long id, TweetReqDTO tweet);
 
+	List<UserRespDTO> getUsersByLikedTweet(Long id);
+
 }

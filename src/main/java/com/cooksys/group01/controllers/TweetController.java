@@ -64,5 +64,10 @@ public class TweetController {
     public TweetRespDTO deleteTweetById(@PathVariable Long id) {
         return tweetService.deleteTweetById(id);
     }
+    
+    @GetMapping("{id}/likes")
+    public List<UserRespDTO> getUsersByLikedTweet(@PathVariable Long id) {
+    	return tweetService.getUsersByLikedTweet(id);
+    }
 
 }
