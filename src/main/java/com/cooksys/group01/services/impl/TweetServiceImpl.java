@@ -26,11 +26,35 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TweetServiceImpl implements TweetService {
 
-    private final TweetRepository tweetRepository;
-    private final UserRepository userRepository;
-    private final HashtagRepository hashtagRepository;
-    private final TweetMapper tweetMapper;
+	private final TweetRepository tweetRepository;
+	private final UserRepository userRepository;
+	private final HashtagRepository hashtagRepository;
+	private final TweetMapper tweetMapper;
 
+	@Override
+	public List<TweetRespDTO> getRepliesById(Long id) {
+		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+		if (opTweet.isEmpty())
+			throw new NotFoundException("Unable To Find Tweet With ID " + id);
+		List<Tweet> respTweet = opTweet.get().getReplyThread();
+		return tweetMapper.entitiesToDTOs(respTweet);
+	}
+
+	@Override
+	public TweetRespDTO repostById(Long id, CredentialsDTO credentials) {
+		Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
+				credentials.getUsername(), credentials.getPassword());
+		if (opUser.isEmpty())
+			throw new BadRequestException("Could Not Verify Credentials");
+		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+		if (opTweet.isEmpty())
+			throw new NotFoundException("Unable To Find Tweet With ID " + id);
+		Tweet tweet = opTweet.get();
+		User user = opUser.get();
+		
+		return null;
+	}
+  
     @Override
     public List<TweetRespDTO> getAllTweets() {
         List<Tweet> allTweets = tweetRepository.findByDeletedFalseOrderByPostedDesc();
