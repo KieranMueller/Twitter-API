@@ -12,4 +12,5 @@ public interface HashtagService {
     HashtagDTO getRandomHashtag();
 
     List<TweetRespDTO> getTweetsByTag(String label);
+
 }
