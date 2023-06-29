@@ -11,6 +11,7 @@ import com.cooksys.group01.exceptions.BadRequestException;
 import com.cooksys.group01.exceptions.NotAuthorizedException;
 import com.cooksys.group01.exceptions.NotFoundException;
 import com.cooksys.group01.mappers.TweetMapper;
+import com.cooksys.group01.mappers.UserMapper;
 import com.cooksys.group01.repositories.HashtagRepository;
 import com.cooksys.group01.repositories.TweetRepository;
 import com.cooksys.group01.repositories.UserRepository;
@@ -32,6 +33,7 @@ public class TweetServiceImpl implements TweetService {
 	private final UserRepository userRepository;
 	private final HashtagRepository hashtagRepository;
 	private final TweetMapper tweetMapper;
+    private final UserMapper userMapper;
   
     List<Character> allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
             'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1',
@@ -39,11 +41,19 @@ public class TweetServiceImpl implements TweetService {
 
 	@Override
 	public List<TweetRespDTO> getRepliesById(Long id) {
+        //TODO: Usernames within reply thread come back null.
 		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
 		if (opTweet.isEmpty())
 			throw new NotFoundException("Unable To Find Tweet With ID " + id);
-		List<Tweet> respTweet = opTweet.get().getReplyThread();
-		return tweetMapper.entitiesToDTOs(respTweet);
+        List<Tweet> replies = opTweet.get().getReplyThread();
+        List<TweetRespDTO> replyDTOs = new ArrayList<>();
+        for(Tweet reply : replies)
+            if(!reply.isDeleted()) {
+                TweetRespDTO tempReplyDTO = tweetMapper.entityToDTO(reply);
+                tempReplyDTO.getAuthor().setUsername(reply.getAuthor().getCredentials().getUsername());
+                replyDTOs.add(tempReplyDTO);
+            }
+        return replyDTOs;
 	}
 
 	@Override
@@ -69,36 +79,35 @@ public class TweetServiceImpl implements TweetService {
     @Override
     public TweetRespDTO replyToTweet(Long id, TweetReqDTO tweetReqDTO) {
         Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
-        if(opTweet.isEmpty()) {
+        if(opTweet.isEmpty())
             throw new NotFoundException("Unable To Find Tweet With ID " + id);
-        }
-
-        Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
-                tweetReqDTO.getCredentials().getUsername(), tweetReqDTO.getCredentials().getPassword());
-        if(opUser.isEmpty()) {
-            throw new NotAuthorizedException("Not Authorized: Unable To Verify Credentials");
-        }
-
-        if(tweetReqDTO.getContent().isEmpty()) {
-            throw new BadRequestException("Content Cannot Be Empty!");
-        }
-
+        if(tweetReqDTO.getCredentials() == null || tweetReqDTO.getContent() == null)
+            throw new BadRequestException("Invalid Credentials");
+        if(tweetReqDTO.getCredentials().getPassword() == null || tweetReqDTO.getCredentials().getUsername() == null)
+            throw new BadRequestException("Invalid Credentials");
+        CredentialsDTO credentials = tweetReqDTO.getCredentials();
+        Optional<User> opUser = userRepository
+                .findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
+                credentials.getUsername(), credentials.getPassword());
+        if(opUser.isEmpty())
+            throw new NotAuthorizedException("Invalid Credentials");
+        // Remember to scan the tweet for mentions and hashtags
+        Tweet tweet = opTweet.get();
         User user = opUser.get();
-
-        TweetReqDTO tweetReplyingToReqDTO = tweetMapper.responseDtoToRequestDto(getTweetById(id));
-        Tweet tweetReplyingTo = tweetMapper.dtoToEntity(tweetReplyingToReqDTO);
-
-        TweetRespDTO replyDTO = createTweet(tweetReqDTO);
-        Tweet replyEntity = tweetMapper.responseDtoToEntity(replyDTO);
-        replyEntity.setContent(tweetReqDTO.getContent());
-        replyEntity.setAuthor(user);
-        replyEntity.setInReplyTo(tweetReplyingTo);
-        tweetRepository.save(tweetReplyingTo);
-        TweetRespDTO reply = tweetMapper.entityToDTO(tweetRepository.saveAndFlush(replyEntity));
-        reply.getAuthor().setUsername(user.getCredentials().getUsername());
-        reply.setContent(tweetReqDTO.getContent());
-
-        return reply;
+        Tweet reply = tweetMapper.dtoToEntity(tweetReqDTO);
+        reply.setInReplyTo(tweet);
+        reply.setAuthor(user);
+        Tweet savedReply = tweetRepository.save(reply);
+        //
+        tweet.addReply(savedReply);
+        tweetRepository.save(tweet);
+//        tweet.setReplyThread(List.of(savedReply));
+        //
+        TweetRespDTO replyDTO = tweetMapper.entityToDTO(savedReply);
+        replyDTO.setAuthor(userMapper.entityToDTO(user));
+        replyDTO.getAuthor().setUsername(user.getCredentials().getUsername());
+        replyDTO.getInReplyTo().getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
+        return replyDTO;
     }
 
     @Override

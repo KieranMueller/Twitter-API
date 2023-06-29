@@ -28,6 +28,11 @@ public class TweetController {
         return tweetService.getTweetById(id);
     }
 
+    @GetMapping("{id}/replies")
+    public List<TweetRespDTO> getRepliesById(@PathVariable Long id) {
+    	return tweetService.getRepliesById(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TweetRespDTO createTweet(@RequestBody TweetReqDTO tweet) {
@@ -39,24 +44,20 @@ public class TweetController {
         return tweetService.likeTweet(id, credentials);
     }
 
-    @DeleteMapping("{id}")
-    public TweetRespDTO deleteTweetById(@PathVariable Long id) {
-        return tweetService.deleteTweetById(id);
-    }
-
     @PostMapping("{id}/reply")
     @ResponseStatus(HttpStatus.CREATED)
     public TweetRespDTO replyToTweet(@PathVariable Long id, @RequestBody TweetReqDTO tweet) {
         return tweetService.replyToTweet(id, tweet);
     }
 
-    @GetMapping("{id}/replies")
-    public List<TweetRespDTO> getRepliesById(@PathVariable Long id) {
-    	return tweetService.getRepliesById(id);
-    }
-    
     @PostMapping("{id}/repost")
     public TweetRespDTO repostById(@PathVariable Long id, @RequestBody CredentialsDTO credentials) {
     	return tweetService.repostById(id, credentials);
     }
+
+    @DeleteMapping("{id}")
+    public TweetRespDTO deleteTweetById(@PathVariable Long id) {
+        return tweetService.deleteTweetById(id);
+    }
+
 }

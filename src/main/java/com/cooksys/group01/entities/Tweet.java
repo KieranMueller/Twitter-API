@@ -60,4 +60,8 @@ public class Tweet {
     @JoinColumn(name = "repostOf")
     private Tweet repostOf;
 
+    public void addReply(Tweet reply) {
+        replyThread.add(reply);
+    }
+
 }
