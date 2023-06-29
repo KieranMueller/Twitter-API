@@ -25,113 +25,140 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TweetServiceImpl implements TweetService {
 
-    private final TweetRepository tweetRepository;
-    private final UserRepository userRepository;
-    private final HashtagRepository hashtagRepository;
-    private final TweetMapper tweetMapper;
+	private final TweetRepository tweetRepository;
+	private final UserRepository userRepository;
+	private final HashtagRepository hashtagRepository;
+	private final TweetMapper tweetMapper;
 
-    @Override
-    public List<TweetRespDTO> getAllTweets() {
-        return tweetMapper.entitiesToDTOs(tweetRepository.findByDeletedFalseOrderByPostedDesc());
-    }
+	@Override
+	public List<TweetRespDTO> getAllTweets() {
+		return tweetMapper.entitiesToDTOs(tweetRepository.findByDeletedFalseOrderByPostedDesc());
+	}
 
-    @Override
-    public TweetRespDTO getTweetById(Long id) {
-        Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
-        if(opTweet.isEmpty()) throw new NotFoundException("Unable To Find Tweet With ID " + id);
-        return tweetMapper.entityToDTO(opTweet.get());
-    }
+	@Override
+	public TweetRespDTO getTweetById(Long id) {
+		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+		if (opTweet.isEmpty())
+			throw new NotFoundException("Unable To Find Tweet With ID " + id);
+		return tweetMapper.entityToDTO(opTweet.get());
+	}
 
-    @Override
-    public TweetRespDTO createTweet(TweetReqDTO tweet) {
-        if(tweet == null)
-            throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
-        if(tweet.getContent() == null || tweet.getCredentials() == null)
-            throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
-        if(tweet.getContent().isBlank())
-            throw new BadRequestException("Tweet Must Contain Content");
-        Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(tweet.getCredentials().getUsername());
-        if(opUser.isEmpty())
-            throw new BadRequestException("Username '" + tweet.getCredentials().getUsername() + "' Invalid. Please Consider Signing Up!");
-        User user = opUser.get();
-        if(!user.getCredentials().getPassword().equals(tweet.getCredentials().getPassword()))
-            throw new BadRequestException("Invalid Password!");
-        Tweet tweetEntity = tweetMapper.dtoToEntity(tweet);
-        tweetEntity.setAuthor(user);
-        var allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-                'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
-        String[] arr = tweet.getContent().split(" ");
-        Set<String> usernamesMentioned = new HashSet<>();
-        Set<String> hashtags = new HashSet<>();
-        for(String word : arr) {
-            String toAdd = "";
-            int i = 0;
-            if(word.startsWith("@")) {
-                i++;
-                while(i < word.length() && allowedCharacters.contains(word.toUpperCase().charAt(i))) {
-                    toAdd += word.charAt(i);
-                    i++;
-                }
-                usernamesMentioned.add(toAdd);
-            } else if(word.startsWith("#")) {
-                toAdd += "#";
-                i++;
-                while(i < word.length() && allowedCharacters.contains(word.toUpperCase().charAt(i))) {
-                    toAdd += word.charAt(i);
-                    i++;
-                }
-                hashtags.add(toAdd);
-            }
-        }
-        List<Hashtag> savedTags = new ArrayList<>();
-        List<String> existingLabels = new ArrayList<>(hashtagRepository.getAllLabels());
-        for(String hashtag : hashtags) {
-            if(!existingLabels.contains(hashtag))
-                savedTags.add(hashtagRepository.save(new Hashtag(null, hashtag, null, null, null)));
-            else {
-                Optional<Hashtag> tagToUpdate = hashtagRepository.findByLabel(hashtag);
-                if(tagToUpdate.isPresent()) {
-                    Date date = new Date();
-                    tagToUpdate.get().setLastUsed(new Timestamp(date.getTime()));
-                    hashtagRepository.save(tagToUpdate.get());
-                }
-            }
-        }
-        for(String possibleUser : usernamesMentioned) {
-            Optional<User> foundUser = userRepository.findByCredentialsUsernameAndDeletedFalse(possibleUser);
-            foundUser.ifPresent(value -> value.addMentionedTweet(tweetEntity));
-        }
-        tweetEntity.setHashtags(savedTags);
-        TweetRespDTO savedTweet = tweetMapper.entityToDTO(tweetRepository.save(tweetEntity));
-        savedTweet.getAuthor().setUsername(user.getCredentials().getUsername());
-        return savedTweet;
-    }
+	@Override
+	public TweetRespDTO createTweet(TweetReqDTO tweet) {
+		if (tweet == null)
+			throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
+		if (tweet.getContent() == null || tweet.getCredentials() == null)
+			throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
+		if (tweet.getContent().isBlank())
+			throw new BadRequestException("Tweet Must Contain Content");
+		Optional<User> opUser = userRepository
+				.findByCredentialsUsernameAndDeletedFalse(tweet.getCredentials().getUsername());
+		if (opUser.isEmpty())
+			throw new BadRequestException(
+					"Username '" + tweet.getCredentials().getUsername() + "' Invalid. Please Consider Signing Up!");
+		User user = opUser.get();
+		if (!user.getCredentials().getPassword().equals(tweet.getCredentials().getPassword()))
+			throw new BadRequestException("Invalid Password!");
+		Tweet tweetEntity = tweetMapper.dtoToEntity(tweet);
+		tweetEntity.setAuthor(user);
+		var allowedCharacters = new ArrayList<>(
+				List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+						'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '{', '}'));
+		String[] arr = tweet.getContent().split(" ");
+		Set<String> usernamesMentioned = new HashSet<>();
+		Set<String> hashtags = new HashSet<>();
+		for (String word : arr) {
+			String toAdd = "";
+			int i = 0;
+			if (word.startsWith("@")) {
+				i++;
+				while (i < word.length() && allowedCharacters.contains(word.toUpperCase().charAt(i))) {
+					toAdd += word.charAt(i);
+					i++;
+				}
+				usernamesMentioned.add(toAdd);
+			} else if (word.startsWith("#")) {
+				toAdd += "#";
+				i++;
+				while (i < word.length() && allowedCharacters.contains(word.toUpperCase().charAt(i))) {
+					toAdd += word.charAt(i);
+					i++;
+				}
+				hashtags.add(toAdd);
+			}
+		}
+		List<Hashtag> savedTags = new ArrayList<>();
+		List<String> existingLabels = new ArrayList<>(hashtagRepository.getAllLabels());
+		for (String hashtag : hashtags) {
+			if (!existingLabels.contains(hashtag))
+				savedTags.add(hashtagRepository.save(new Hashtag(null, hashtag, null, null, null)));
+			else {
+				Optional<Hashtag> tagToUpdate = hashtagRepository.findByLabel(hashtag);
+				if (tagToUpdate.isPresent()) {
+					Date date = new Date();
+					tagToUpdate.get().setLastUsed(new Timestamp(date.getTime()));
+					hashtagRepository.save(tagToUpdate.get());
+				}
+			}
+		}
+		for (String possibleUser : usernamesMentioned) {
+			Optional<User> foundUser = userRepository.findByCredentialsUsernameAndDeletedFalse(possibleUser);
+			foundUser.ifPresent(value -> value.addMentionedTweet(tweetEntity));
+		}
+		tweetEntity.setHashtags(savedTags);
+		TweetRespDTO savedTweet = tweetMapper.entityToDTO(tweetRepository.save(tweetEntity));
+		savedTweet.getAuthor().setUsername(user.getCredentials().getUsername());
+		return savedTweet;
+	}
 
-    @Override
-    public ResponseEntity<HttpStatus> likeTweet(Long id, CredentialsDTO credentials) {
-        Optional<User> opUser = userRepository.
-                findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(credentials.getUsername(), credentials.getPassword());
-        if(opUser.isEmpty())
-            throw new BadRequestException("Could Not Verify Credentials");
-        Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
-        if(opTweet.isEmpty())
-            throw new NotFoundException("Unable To Find Tweet With ID " + id);
-        Tweet tweet = opTweet.get();
-        User user = opUser.get();
-        user.addLikedTweet(tweet);
-        userRepository.saveAndFlush(user);
+	@Override
+	public ResponseEntity<HttpStatus> likeTweet(Long id, CredentialsDTO credentials) {
+		Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
+				credentials.getUsername(), credentials.getPassword());
+		if (opUser.isEmpty())
+			throw new BadRequestException("Could Not Verify Credentials");
+		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+		if (opTweet.isEmpty())
+			throw new NotFoundException("Unable To Find Tweet With ID " + id);
+		Tweet tweet = opTweet.get();
+		User user = opUser.get();
+		user.addLikedTweet(tweet);
+		userRepository.saveAndFlush(user);
 
+		return null;
+	}
 
-        return null;
-    }
+	@Override
+	public TweetRespDTO deleteTweetById(Long id) {
+		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+		if (opTweet.isEmpty())
+			throw new NotFoundException("Unable To Find Tweet With ID " + id);
+		opTweet.get().setDeleted(true);
+		return tweetMapper.entityToDTO(tweetRepository.save(opTweet.get()));
+	}
 
-    @Override
-    public TweetRespDTO deleteTweetById(Long id) {
-        Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
-        if(opTweet.isEmpty())
-            throw new NotFoundException("Unable To Find Tweet With ID " + id);
-        opTweet.get().setDeleted(true);
-        return tweetMapper.entityToDTO(tweetRepository.save(opTweet.get()));
-    }
+	@Override
+	public List<TweetRespDTO> getRepliesById(Long id) {
+		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+		if (opTweet.isEmpty())
+			throw new NotFoundException("Unable To Find Tweet With ID " + id);
+		List<Tweet> respTweet = opTweet.get().getReplyThread();
+		return tweetMapper.entitiesToDTOs(respTweet);
+	}
+
+	@Override
+	public TweetRespDTO repostById(Long id, CredentialsDTO credentials) {
+		Optional<User> opUser = userRepository.findByCredentialsUsernameAndCredentialsPasswordAndDeletedFalse(
+				credentials.getUsername(), credentials.getPassword());
+		if (opUser.isEmpty())
+			throw new BadRequestException("Could Not Verify Credentials");
+		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+		if (opTweet.isEmpty())
+			throw new NotFoundException("Unable To Find Tweet With ID " + id);
+		Tweet tweet = opTweet.get();
+		User user = opUser.get();
+		
+		return null;
+	}
 
 }
