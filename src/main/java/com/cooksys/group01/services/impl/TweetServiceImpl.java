@@ -1,10 +1,6 @@
 package com.cooksys.group01.services.impl;
 
-import com.cooksys.group01.dtos.CredentialsDTO;
-import com.cooksys.group01.dtos.HashtagDTO;
-import com.cooksys.group01.dtos.TweetReqDTO;
-import com.cooksys.group01.dtos.TweetRespDTO;
-import com.cooksys.group01.dtos.UserRespDTO;
+import com.cooksys.group01.dtos.*;
 import com.cooksys.group01.entities.Hashtag;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
@@ -189,6 +185,71 @@ public class TweetServiceImpl implements TweetService {
     }
 
     @Override
+    public ContextRespDTO getContextById(Long id) {
+        Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+        if(opTweet.isEmpty()) {
+            throw new NotFoundException("Tweet With ID " + id + " Not Found!");
+        }
+        Tweet tweet = opTweet.get();
+
+        // TARGET CONTEXT
+        ContextRespDTO contextDTO = new ContextRespDTO();
+        contextDTO.setTarget(tweetMapper.entityToDTO(tweet));
+        contextDTO.getTarget().getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
+        if(contextDTO.getTarget().getInReplyTo() != null) {
+            contextDTO.getTarget().getInReplyTo().getAuthor().setUsername(tweet.getInReplyTo().getAuthor().getCredentials().getUsername());
+        }
+
+        // BEFORE CONTEXT
+        List<Tweet> beforeList = new ArrayList<>();
+        List<TweetRespDTO> beforeRespDTOs = new ArrayList<>();
+        Tweet actualTweet = tweet;
+        while (actualTweet.getInReplyTo() != null) {
+            actualTweet = actualTweet.getInReplyTo();
+            checkStatus: if (!actualTweet.isDeleted()) {
+                Optional<User> opUser = userRepository.findByCredentialsUsername(actualTweet.getAuthor().getCredentials().getUsername());
+                if(opUser.isEmpty()) {
+                    break checkStatus;
+                }
+                User user = opUser.get();
+                UserRespDTO userDTO = userMapper.entityToDTO(user);
+
+                TweetRespDTO tweetRespDTO = new TweetRespDTO();
+                tweetRespDTO.setId(actualTweet.getId());
+                tweetRespDTO.setAuthor(userDTO);
+                tweetRespDTO.getAuthor().setUsername(actualTweet.getAuthor().getCredentials().getUsername());
+                tweetRespDTO.setPosted(actualTweet.getPosted());
+                tweetRespDTO.setContent(actualTweet.getContent());
+                beforeRespDTOs.add(tweetRespDTO);
+            }
+        }
+        contextDTO.setBefore(beforeRespDTOs);
+
+        // AFTER CONTEXT
+        List<Tweet> afterList = new ArrayList<>();
+        performBFS(tweet.getReplyThread(), afterList);
+        List<TweetRespDTO> afterRespDTOs = new ArrayList<>();
+        for(Tweet twt : afterList) {
+            TweetRespDTO tweetRespDTO = new TweetRespDTO();
+            tweetRespDTO.setId(twt.getId());
+            Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(twt.getAuthor().getCredentials().getUsername());
+            if(opUser.isEmpty()) {
+                break;
+            }
+            User user = opUser.get();
+            UserRespDTO userDTO = userMapper.entityToDTO(user);
+            System.out.println("user: " + user.getCredentials().getUsername());
+            tweetRespDTO.setAuthor(userDTO);
+            tweetRespDTO.getAuthor().setUsername(twt.getAuthor().getCredentials().getUsername());
+            tweetRespDTO.setContent(twt.getContent());
+            afterRespDTOs.add(tweetRespDTO);
+        }
+
+        contextDTO.setAfter(afterRespDTOs);
+        return contextDTO;
+    }
+
+    @Override
     public TweetRespDTO createTweet(TweetReqDTO tweet) {
         if(tweet.getContent() == null || tweet.getCredentials() == null)
             throw new BadRequestException("Tweet Must Contain Content, Username, and Password");
@@ -312,5 +373,20 @@ public class TweetServiceImpl implements TweetService {
 	        }
 		return hashtagMapper.entitiesToDTOs(hashtags);
 	}
-		
+
+    // HELPER FUNCTIONS
+    private void performBFS(List<Tweet> replyThread, List<Tweet> tweetsAfter) {
+        if (replyThread == null || replyThread.isEmpty()) {
+            return;
+        }
+
+        Queue<Tweet> queue = new LinkedList<>(replyThread);
+        while (!queue.isEmpty()) {
+            Tweet tweet = queue.poll();
+            if (!tweet.isDeleted()) {
+                tweetsAfter.add(tweet);
+            }
+            queue.addAll(tweet.getReplyThread());
+        }
+    }
 }
