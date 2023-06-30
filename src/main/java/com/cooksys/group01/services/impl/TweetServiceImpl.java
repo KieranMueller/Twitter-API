@@ -192,10 +192,12 @@ public class TweetServiceImpl implements TweetService {
         }
         Tweet tweet = opTweet.get();
 
+        // TARGET CONTEXT
         ContextRespDTO contextDTO = new ContextRespDTO();
         contextDTO.setTarget(tweetMapper.entityToDTO(tweet));
         contextDTO.getTarget().getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
 
+        // BEFORE CONTEXT
         List<Tweet> beforeList = new ArrayList<>();
         Tweet actualTweet = tweet;
         while (actualTweet.getInReplyTo() != null) {
@@ -208,16 +210,31 @@ public class TweetServiceImpl implements TweetService {
                 User user = opUser.get();
                 actualTweet.setAuthor(user);
                 actualTweet.getAuthor().getCredentials().setUsername(user.getCredentials().getUsername());
-                System.out.println(user.getCredentials().getUsername());
                 beforeList.add(actualTweet);
             }
         }
-        for(Tweet bTweet : beforeList) {
-            System.out.println(bTweet.getAuthor().getCredentials().getUsername());
-        }
         contextDTO.setBefore(tweetMapper.entitiesToDTOs(beforeList));
 
-        contextDTO.setAfter(tweetMapper.entitiesToDTOs(_getTweetsAfter(tweet)));
+        // AFTER CONTEXT
+        List<Tweet> afterList = new ArrayList<>();
+        performBFS(tweet.getReplyThread(), afterList);
+        List<TweetRespDTO> tweetRespDTOs = new ArrayList<>();
+        /*for(Tweet twt : afterList) {
+            TweetRespDTO tweetRespDTO = new TweetRespDTO();
+            tweetRespDTO.setId(twt.getId());
+            Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(twt.getAuthor().getCredentials().getUsername());
+            if(opUser.isEmpty()) {
+                break;
+            }
+            User user = opUser.get();
+            UserRespDTO userDTO = userMapper.entityToDTO(user);
+            System.out.println("user: " + user.getCredentials().getUsername());
+            tweetRespDTO.setAuthor(userDTO);
+            tweetRespDTO.setContent(twt.getContent());
+            tweetRespDTOs.add(tweetRespDTO);
+        }*/
+
+        contextDTO.setAfter(tweetRespDTOs);
         return contextDTO;
     }
 
@@ -347,19 +364,18 @@ public class TweetServiceImpl implements TweetService {
 	}
 
     // HELPER FUNCTIONS
-
-    private List<Tweet> _getTweetsBefore(Tweet tweet) {
-        List<Tweet> tweetList = new ArrayList<>();
-        Tweet actualTweet = tweet;
-        while (actualTweet.getInReplyTo() != null) {
-            actualTweet = actualTweet.getInReplyTo();
-            if (!actualTweet.isDeleted())
-                tweetList.add(actualTweet);
+    private void performBFS(List<Tweet> replyThread, List<Tweet> tweetsAfter) {
+        if (replyThread == null || replyThread.isEmpty()) {
+            return;
         }
-        return tweetList;
-    }
 
-    private List<Tweet> _getTweetsAfter(Tweet tweet) {
-        return null;
+        Queue<Tweet> queue = new LinkedList<>(replyThread);
+        while (!queue.isEmpty()) {
+            Tweet tweet = queue.poll();
+            if (!tweet.isDeleted()) {
+                tweetsAfter.add(tweet);
+            }
+            queue.addAll(tweet.getReplyThread());
+        }
     }
 }
