@@ -39,7 +39,6 @@ public class TweetServiceImpl implements TweetService {
 
 	@Override
 	public List<TweetRespDTO> getRepliesById(Long id) {
-        //TODO: Usernames within reply thread come back null.
 		Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
 		if (opTweet.isEmpty())
 			throw new NotFoundException("Unable To Find Tweet With ID " + id);
@@ -47,9 +46,10 @@ public class TweetServiceImpl implements TweetService {
         List<TweetRespDTO> replyDTOs = new ArrayList<>();
         for(Tweet reply : replies)
             if(!reply.isDeleted()) {
-                TweetRespDTO tempReplyDTO = tweetMapper.entityToDTO(reply);
-                tempReplyDTO.getAuthor().setUsername(reply.getAuthor().getCredentials().getUsername());
-                replyDTOs.add(tempReplyDTO);
+                TweetRespDTO replyDTO = tweetMapper.entityToDTO(reply);
+                replyDTO.getInReplyTo().getAuthor().setUsername(reply.getInReplyTo().getAuthor().getCredentials().getUsername());
+                replyDTO.getAuthor().setUsername(reply.getAuthor().getCredentials().getUsername());
+                replyDTOs.add(replyDTO);
             }
         return replyDTOs;
 	}
