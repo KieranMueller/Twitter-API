@@ -186,7 +186,39 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     public ContextRespDTO getContextById(Long id) {
-        return null;
+        Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+        if(opTweet.isEmpty()) {
+            throw new NotFoundException("Tweet With ID " + id + " Not Found!");
+        }
+        Tweet tweet = opTweet.get();
+
+        ContextRespDTO contextDTO = new ContextRespDTO();
+        contextDTO.setTarget(tweetMapper.entityToDTO(tweet));
+        contextDTO.getTarget().getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
+
+        List<Tweet> beforeList = new ArrayList<>();
+        Tweet actualTweet = tweet;
+        while (actualTweet.getInReplyTo() != null) {
+            actualTweet = actualTweet.getInReplyTo();
+            checkStatus: if (!actualTweet.isDeleted()) {
+                Optional<User> opUser = userRepository.findByCredentialsUsername(actualTweet.getAuthor().getCredentials().getUsername());
+                if(opUser.isEmpty()) {
+                    break checkStatus;
+                }
+                User user = opUser.get();
+                actualTweet.setAuthor(user);
+                actualTweet.getAuthor().getCredentials().setUsername(user.getCredentials().getUsername());
+                System.out.println(user.getCredentials().getUsername());
+                beforeList.add(actualTweet);
+            }
+        }
+        for(Tweet bTweet : beforeList) {
+            System.out.println(bTweet.getAuthor().getCredentials().getUsername());
+        }
+        contextDTO.setBefore(tweetMapper.entitiesToDTOs(beforeList));
+
+        contextDTO.setAfter(tweetMapper.entitiesToDTOs(_getTweetsAfter(tweet)));
+        return contextDTO;
     }
 
     @Override
@@ -313,5 +345,21 @@ public class TweetServiceImpl implements TweetService {
 	        }
 		return hashtagMapper.entitiesToDTOs(hashtags);
 	}
-		
+
+    // HELPER FUNCTIONS
+
+    private List<Tweet> _getTweetsBefore(Tweet tweet) {
+        List<Tweet> tweetList = new ArrayList<>();
+        Tweet actualTweet = tweet;
+        while (actualTweet.getInReplyTo() != null) {
+            actualTweet = actualTweet.getInReplyTo();
+            if (!actualTweet.isDeleted())
+                tweetList.add(actualTweet);
+        }
+        return tweetList;
+    }
+
+    private List<Tweet> _getTweetsAfter(Tweet tweet) {
+        return null;
+    }
 }
