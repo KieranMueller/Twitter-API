@@ -266,5 +266,5 @@ public class TweetServiceImpl implements TweetService {
 	        }
 		return hashtagMapper.entitiesToDTOs(hashtags);
 	}
-
+		
 }
