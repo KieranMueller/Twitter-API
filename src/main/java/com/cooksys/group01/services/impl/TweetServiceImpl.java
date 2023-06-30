@@ -1,10 +1,6 @@
 package com.cooksys.group01.services.impl;
 
-import com.cooksys.group01.dtos.CredentialsDTO;
-import com.cooksys.group01.dtos.HashtagDTO;
-import com.cooksys.group01.dtos.TweetReqDTO;
-import com.cooksys.group01.dtos.TweetRespDTO;
-import com.cooksys.group01.dtos.UserRespDTO;
+import com.cooksys.group01.dtos.*;
 import com.cooksys.group01.entities.Hashtag;
 import com.cooksys.group01.entities.Tweet;
 import com.cooksys.group01.entities.User;
@@ -186,6 +182,11 @@ public class TweetServiceImpl implements TweetService {
             repostDTOs.add(repostDTO);
         }
         return repostDTOs;
+    }
+
+    @Override
+    public ContextRespDTO getContextById(Long id) {
+        return null;
     }
 
     @Override

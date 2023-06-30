@@ -2,6 +2,7 @@ package com.cooksys.group01.controllers;
 
 import java.util.List;
 
+import com.cooksys.group01.dtos.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,11 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cooksys.group01.dtos.CredentialsDTO;
-import com.cooksys.group01.dtos.HashtagDTO;
-import com.cooksys.group01.dtos.TweetReqDTO;
-import com.cooksys.group01.dtos.TweetRespDTO;
-import com.cooksys.group01.dtos.UserRespDTO;
 import com.cooksys.group01.services.HashtagService;
 import com.cooksys.group01.services.TweetService;
 
@@ -54,6 +50,11 @@ public class TweetController {
     @GetMapping("{id}/reposts")
     public List<TweetRespDTO> getRepostsById(@PathVariable Long id) {
         return tweetService.getRepostsById(id);
+    }
+
+    @GetMapping("{id}/context")
+    public ContextRespDTO getContextById(@PathVariable Long id) {
+        return tweetService.getContextById(id);
     }
 
     @PostMapping
