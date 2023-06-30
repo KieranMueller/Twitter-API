@@ -1,17 +1,5 @@
 package com.cooksys.group01.services.impl;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import com.cooksys.group01.dtos.CredentialsDTO;
 import com.cooksys.group01.dtos.HashtagDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
@@ -30,8 +18,13 @@ import com.cooksys.group01.repositories.HashtagRepository;
 import com.cooksys.group01.repositories.TweetRepository;
 import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.TweetService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -107,10 +100,8 @@ public class TweetServiceImpl implements TweetService {
         reply.setInReplyTo(tweet);
         reply.setAuthor(user);
         Tweet savedReply = tweetRepository.save(reply);
-
         tweet.addReply(savedReply);
         tweetRepository.save(tweet);
-//
         TweetRespDTO replyDTO = tweetMapper.entityToDTO(savedReply);
         replyDTO.setAuthor(userMapper.entityToDTO(user));
         replyDTO.getAuthor().setUsername(user.getCredentials().getUsername());
