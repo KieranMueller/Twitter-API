@@ -4,11 +4,14 @@ import com.cooksys.group01.dtos.HashtagDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.entities.Hashtag;
 import com.cooksys.group01.entities.Tweet;
-import com.cooksys.group01.exceptions.BadRequestException;
+import com.cooksys.group01.entities.User;
+import com.cooksys.group01.exceptions.NotFoundException;
 import com.cooksys.group01.mappers.HashtagMapper;
 import com.cooksys.group01.mappers.TweetMapper;
+import com.cooksys.group01.mappers.UserMapper;
 import com.cooksys.group01.repositories.HashtagRepository;
 import com.cooksys.group01.repositories.TweetRepository;
+import com.cooksys.group01.repositories.UserRepository;
 import com.cooksys.group01.services.HashtagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ public class HashtagServiceImpl implements HashtagService {
     private final HashtagMapper hashtagMapper;
     private final TweetRepository tweetRepository;
     private final TweetMapper tweetMapper;
+    private final UserRepository userRepository;
 
     @Override
     public List<HashtagDTO> getAllTags() {
@@ -43,32 +47,35 @@ public class HashtagServiceImpl implements HashtagService {
     }
     @Override
     public List<TweetRespDTO> getTweetsByTag(String label) {
-        Optional<Hashtag> opHashtag = hashtagRepository.findByLabel(label);
+
+        Optional<Hashtag> opHashtag = hashtagRepository.findByLabel("#" + label);
         if(opHashtag.isEmpty()) {
-            throw new BadRequestException("No Hashtag with the label #" + label + " Found!");
+            throw new NotFoundException("No Hashtag with the label #" + label + " Found!");
         }
-        Hashtag hashtag = opHashtag.get();
 
         List<Tweet> tweets = tweetRepository.findByDeletedFalseOrderByPostedDesc();
         List<TweetRespDTO> tweetsWithTag = new ArrayList<>();
 
         for(Tweet tweet : tweets) {
             String[] content = tweet.getContent().split(" ");
+            Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(tweet.getAuthor().getCredentials().getUsername());
+            if(opUser.isEmpty()) {
+                break;
+            }
 
+            User user = opUser.get();
             for(String word : content) {
-                if (word.startsWith("#") && word.substring(1).equals(label)) {
-                    tweetsWithTag.add(tweetMapper.entityToDTO(tweet));
-                    hashtag.addTweetWithHashtag(tweet);
-                    break;
+                if(word.startsWith("#") && word.substring(1).equals(label)) {
+                    TweetRespDTO tweetRespDTO = tweetMapper.entityToDTO(tweet);
+                    tweetRespDTO.getAuthor().setUsername(user.getCredentials().getUsername());
+                    tweetsWithTag.add(tweetRespDTO);
                 }
             }
         }
 
         if(tweetsWithTag.isEmpty()) {
-            throw new BadRequestException("No Tweets With The Hashtag #" + label + " Exists!");
+            throw new NotFoundException("No Tweets With The Hashtag #" + label + " Exists!");
         }
-
-        hashtagRepository.saveAndFlush(hashtag);
         return tweetsWithTag;
     }
 
