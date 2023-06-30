@@ -1,16 +1,27 @@
 package com.cooksys.group01.controllers;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.cooksys.group01.dtos.CredentialsDTO;
+import com.cooksys.group01.dtos.HashtagDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
+import com.cooksys.group01.services.HashtagService;
 import com.cooksys.group01.services.TweetService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,6 +29,7 @@ import java.util.List;
 public class TweetController {
 
     private final TweetService tweetService;
+    private final HashtagService hashtagService;
 
     @GetMapping
     public List<TweetRespDTO> getAllTweets() {
@@ -64,6 +76,11 @@ public class TweetController {
     @GetMapping("{id}/likes")
     public List<UserRespDTO> getUsersByLikedTweet(@PathVariable Long id) {
     	return tweetService.getUsersByLikedTweet(id);
+    }
+    
+    @GetMapping("{id}/tags")
+    public List<HashtagDTO> getTagsByTweetId(@PathVariable Long id){
+    	return tweetService.getTagsByTweetId(id);
     }
 
 }

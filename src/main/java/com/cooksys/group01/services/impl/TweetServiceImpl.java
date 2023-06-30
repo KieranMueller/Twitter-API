@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.cooksys.group01.dtos.CredentialsDTO;
+import com.cooksys.group01.dtos.HashtagDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
@@ -22,6 +23,7 @@ import com.cooksys.group01.entities.User;
 import com.cooksys.group01.exceptions.BadRequestException;
 import com.cooksys.group01.exceptions.NotAuthorizedException;
 import com.cooksys.group01.exceptions.NotFoundException;
+import com.cooksys.group01.mappers.HashtagMapper;
 import com.cooksys.group01.mappers.TweetMapper;
 import com.cooksys.group01.mappers.UserMapper;
 import com.cooksys.group01.repositories.HashtagRepository;
@@ -40,6 +42,7 @@ public class TweetServiceImpl implements TweetService {
 	private final HashtagRepository hashtagRepository;
 	private final TweetMapper tweetMapper;
     private final UserMapper userMapper;
+    private final HashtagMapper hashtagMapper;
   
     List<Character> allowedCharacters = new ArrayList<>(List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
             'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1',
@@ -249,6 +252,19 @@ public class TweetServiceImpl implements TweetService {
 	                replyDTOs.add(tempLikesDTO);
 	            }
 		    return replyDTOs;
+	}
+
+	@Override
+	public List<HashtagDTO> getTagsByTweetId(Long id) {
+		 Optional<Tweet> opTweet = tweetRepository.findByIdAndDeletedFalse(id);
+	        if(opTweet.isEmpty())
+	            throw new NotFoundException("Unable To Find Tweet With ID " + id);
+	        Tweet tweet = opTweet.get();
+	        List<Hashtag> hashtags = tweet.getHashtags();
+	        for (Hashtag hash : hashtags) {
+	        	hash.setLabel(hash.getLabel().replace("#", ""));
+	        }
+		return hashtagMapper.entitiesToDTOs(hashtags);
 	}
 
 }

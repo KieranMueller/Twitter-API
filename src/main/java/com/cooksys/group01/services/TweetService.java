@@ -1,6 +1,7 @@
 package com.cooksys.group01.services;
 
 import com.cooksys.group01.dtos.CredentialsDTO;
+import com.cooksys.group01.dtos.HashtagDTO;
 import com.cooksys.group01.dtos.TweetReqDTO;
 import com.cooksys.group01.dtos.TweetRespDTO;
 import com.cooksys.group01.dtos.UserRespDTO;
@@ -29,5 +30,7 @@ public interface TweetService {
     TweetRespDTO replyToTweet(Long id, TweetReqDTO tweet);
 
 	List<UserRespDTO> getUsersByLikedTweet(Long id);
+
+	List<HashtagDTO> getTagsByTweetId(Long id);
 
 }
