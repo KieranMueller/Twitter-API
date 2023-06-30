@@ -196,9 +196,13 @@ public class TweetServiceImpl implements TweetService {
         ContextRespDTO contextDTO = new ContextRespDTO();
         contextDTO.setTarget(tweetMapper.entityToDTO(tweet));
         contextDTO.getTarget().getAuthor().setUsername(tweet.getAuthor().getCredentials().getUsername());
+        if(contextDTO.getTarget().getInReplyTo() != null) {
+            contextDTO.getTarget().getInReplyTo().getAuthor().setUsername(tweet.getInReplyTo().getAuthor().getCredentials().getUsername());
+        }
 
         // BEFORE CONTEXT
         List<Tweet> beforeList = new ArrayList<>();
+        List<TweetRespDTO> beforeRespDTOs = new ArrayList<>();
         Tweet actualTweet = tweet;
         while (actualTweet.getInReplyTo() != null) {
             actualTweet = actualTweet.getInReplyTo();
@@ -208,18 +212,24 @@ public class TweetServiceImpl implements TweetService {
                     break checkStatus;
                 }
                 User user = opUser.get();
-                actualTweet.setAuthor(user);
-                actualTweet.getAuthor().getCredentials().setUsername(user.getCredentials().getUsername());
-                beforeList.add(actualTweet);
+                UserRespDTO userDTO = userMapper.entityToDTO(user);
+
+                TweetRespDTO tweetRespDTO = new TweetRespDTO();
+                tweetRespDTO.setId(actualTweet.getId());
+                tweetRespDTO.setAuthor(userDTO);
+                tweetRespDTO.getAuthor().setUsername(actualTweet.getAuthor().getCredentials().getUsername());
+                tweetRespDTO.setPosted(actualTweet.getPosted());
+                tweetRespDTO.setContent(actualTweet.getContent());
+                beforeRespDTOs.add(tweetRespDTO);
             }
         }
-        contextDTO.setBefore(tweetMapper.entitiesToDTOs(beforeList));
+        contextDTO.setBefore(beforeRespDTOs);
 
         // AFTER CONTEXT
         List<Tweet> afterList = new ArrayList<>();
         performBFS(tweet.getReplyThread(), afterList);
-        List<TweetRespDTO> tweetRespDTOs = new ArrayList<>();
-        /*for(Tweet twt : afterList) {
+        List<TweetRespDTO> afterRespDTOs = new ArrayList<>();
+        for(Tweet twt : afterList) {
             TweetRespDTO tweetRespDTO = new TweetRespDTO();
             tweetRespDTO.setId(twt.getId());
             Optional<User> opUser = userRepository.findByCredentialsUsernameAndDeletedFalse(twt.getAuthor().getCredentials().getUsername());
@@ -230,11 +240,12 @@ public class TweetServiceImpl implements TweetService {
             UserRespDTO userDTO = userMapper.entityToDTO(user);
             System.out.println("user: " + user.getCredentials().getUsername());
             tweetRespDTO.setAuthor(userDTO);
+            tweetRespDTO.getAuthor().setUsername(twt.getAuthor().getCredentials().getUsername());
             tweetRespDTO.setContent(twt.getContent());
-            tweetRespDTOs.add(tweetRespDTO);
-        }*/
+            afterRespDTOs.add(tweetRespDTO);
+        }
 
-        contextDTO.setAfter(tweetRespDTOs);
+        contextDTO.setAfter(afterRespDTOs);
         return contextDTO;
     }
 
